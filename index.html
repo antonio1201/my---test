@@ -28,7 +28,6 @@
             -webkit-tap-highlight-color: transparent; 
         }
         
-        /* 側邊選單與遮罩 */
         .menu-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9998; backdrop-filter: blur(2px); }
         .side-menu {
             position: fixed; top: 0; left: -280px; width: 260px; height: 100%; background: white; z-index: 9999;
@@ -44,14 +43,12 @@
         .side-menu button:active { background: #e0e0e0; }
         .menu-title { padding: 0 20px 10px 20px; font-size: 14px; color: #888; border-bottom: 2px solid #3498DB; margin-bottom: 10px; text-align: left; font-weight: bold; }
 
-        /* 浮動提示框 (Toast) */
         .toast-msg {
             display: none; position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
             background: rgba(46, 204, 113, 0.95); color: white; padding: 10px 20px; border-radius: 20px;
             font-weight: bold; z-index: 10000; box-shadow: 0 4px 6px rgba(0,0,0,0.2); font-size: 14px;
         }
 
-        /* 修改：徹底穩定控制面板佈局，確保漢堡選單在框內 */
         .controls { 
             background: white; 
             padding: 10px; 
@@ -125,18 +122,46 @@
         video { display: none; } 
         canvas { width: 100%; height: 100%; object-fit: cover; display: block; }
         
-        /* 紀錄庫滿版視窗 */
+        /* 紀錄庫視窗與多選管理樣式 */
         #galleryModalUI { display: none; position: fixed; z-index: 10001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); flex-direction: column; justify-content: flex-start; align-items: center; overflow-y: auto; padding-top: calc(20px + env(safe-area-inset-top)); padding-bottom: 20px; }
         .gallery-container { margin: 0 auto; padding: 15px; background: white; border-radius: 8px; width: 90%; max-width: 600px; text-align: left; }
-        .gallery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px;}
-        .gallery-title { margin: 0; font-size: 18px; color: #333; font-weight: bold; }
-        .save-all-btn { background-color: #F1C40F; color: #333; border: none; padding: 5px 12px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .gallery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 10px;}
+        .gallery-title { margin: 0; font-size: 16px; color: #333; font-weight: bold; line-height: 1.4; }
+        .gallery-title span { display: block; font-size: 12px; color: #E74C3C; }
+        
+        #bulkActions { display: none; justify-content: space-between; margin-bottom: 15px; background: #f1f2f6; padding: 10px; border-radius: 8px; width: 100%; box-sizing: border-box; align-items: center; flex-wrap: wrap; gap: 8px; }
+        #bulkActions button { padding: 8px 12px; border-radius: 5px; font-weight: bold; cursor: pointer; border: none; font-size: 14px; }
         
         #gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; justify-items: center;}
-        .gallery-item { text-align: center; width: 100%; }
-        .gallery-item img, .gallery-item video { width: 100%; height: 110px; border-radius: 5px; border: 1px solid #ddd; display: block; margin-bottom: 5px; background: black; cursor: pointer; object-fit: cover; }
-        .gallery-item button { width: 100%; padding: 8px 0; font-size: 12px; cursor: pointer; background-color: #3498DB; color: white; border: none; border-radius: 3px; font-weight: bold;}
-        .gallery-item .vid-btn { background-color: #9B59B6; }
+        
+        .gallery-item { text-align: center; width: 100%; position: relative; overflow: hidden; border-radius: 5px; border: 1px solid #ddd; background: black; }
+        .gallery-item img, .gallery-item video { width: 100%; height: 110px; display: block; cursor: pointer; object-fit: cover; }
+        
+        /* 自動刪除倒數標籤 */
+        .timer-badge {
+            position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,0.75); color: #fff;
+            font-size: 12px; padding: 2px 6px; border-radius: 4px; font-weight: bold; pointer-events: none;
+        }
+
+        /* 多選模式遮罩與打勾 */
+        .select-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3);
+            display: none; pointer-events: none; border: 3px solid transparent; box-sizing: border-box; border-radius: 5px;
+        }
+        .select-overlay::after {
+            content: ''; position: absolute; top: 5px; right: 5px; width: 22px; height: 22px; 
+            border-radius: 50%; border: 2px solid #fff; background: rgba(0,0,0,0.5); box-sizing: border-box;
+        }
+        .gallery-item.selected .select-overlay { display: block; border-color: #2ECC71; background: rgba(46,204,113,0.2); }
+        .gallery-item.selected .select-overlay::after {
+            background: #2ECC71; content: '✔'; color: white; line-height: 20px; font-size: 14px; text-align: center; border-color: #2ECC71;
+        }
+        .select-mode-on .gallery-item { cursor: pointer; }
+        .select-mode-on .gallery-item:not(.selected) .select-overlay { display: block; }
+        
+        /* 單獨存檔按鈕 (多選模式下隱藏) */
+        .indiv-save-btn { width: 100%; padding: 8px 0; font-size: 13px; cursor: pointer; background-color: #3498DB; color: white; border: none; font-weight: bold; display: block; }
+        .select-mode-on .indiv-save-btn { display: none; }
 
         .modal { display: none; position: fixed; z-index: 10005; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.95); flex-direction: column; justify-content: center; align-items: center; }
         .modal-content-wrapper { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; }
@@ -160,7 +185,6 @@
         .score-table th, .score-table td { border: 1px solid #ddd; padding: 8px 4px; min-width: 30px; }
         .score-table th { background: #f9f9f9; }
         
-        /* 修改：讓計分格可以點擊，加上 hover 提示 */
         .score-table td.score-cell { cursor: pointer; transition: background 0.2s; }
         .score-table td.score-cell:active { background-color: #e0e0e0; }
         .score-table td.active-cell { background-color: #FFF3CD !important; border: 2px solid #E67E22; box-shadow: inset 0 0 5px rgba(230,126,34,0.5); font-weight: bold; }
@@ -240,13 +264,23 @@
     <div id="galleryModalUI">
         <div class="gallery-container" id="galleryContainer">
             <div class="gallery-header">
-                <p class="gallery-title">📸 高畫質紀錄庫</p>
-                <div style="display: flex; align-items: center;">
-                    <button class="save-all-btn" id="saveAllBtn">✨ 一鍵存檔</button>
-                    <span id="closeGalleryModal" style="font-size: 28px; cursor: pointer; margin-left: 15px; font-weight: bold;">&times;</span>
+                <p class="gallery-title">📸 媒體紀錄庫<br><span>(關閉網頁保留，10分鐘自動刪除)</span></p>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button id="toggleSelectModeBtn" style="background: #34495E; color: white; border: none; padding: 6px 12px; border-radius: 5px; font-weight: bold; cursor: pointer;">☑️ 多選模式</button>
+                    <span id="closeGalleryModal" style="font-size: 32px; cursor: pointer; font-weight: bold; line-height: 1;">&times;</span>
                 </div>
             </div>
-            <div id="gallery"></div>
+            
+            <div id="bulkActions">
+                <div style="display: flex; gap: 8px;">
+                    <button id="saveSelectedBtn" style="background:#2ECC71; color:white;">💾 儲存選取</button>
+                    <button id="deleteSelectedBtn" style="background:#E74C3C; color:white;">🗑️ 刪除選取</button>
+                </div>
+                <button id="deleteAllBtn" style="background:#c0392b; color:white;">❌ 一鍵全刪</button>
+            </div>
+
+            <div id="gallery">
+                </div>
         </div>
     </div>
 
@@ -327,7 +361,231 @@
     </div>
 
     <script>
-        // 漢堡選單邏輯
+        // ========== IndexedDB 媒體庫管理系統 (10分鐘自動銷毀) ==========
+        const DB_NAME = 'ArcheryMediaDB';
+        const TEN_MINUTES = 10 * 60 * 1000;
+        let db;
+        let mediaItems = [];
+        let isSelectMode = false;
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, 1);
+                request.onerror = e => reject(e);
+                request.onsuccess = e => { db = e.target.result; resolve(db); };
+                request.onupgradeneeded = e => {
+                    const tempDb = e.target.result;
+                    if (!tempDb.objectStoreNames.contains('media')) {
+                        tempDb.createObjectStore('media', { keyPath: 'id' });
+                    }
+                };
+            });
+        }
+
+        async function loadMediaFromDB() {
+            try {
+                await initDB();
+                const tx = db.transaction('media', 'readonly');
+                const store = tx.objectStore('media');
+                const request = store.getAll();
+                request.onsuccess = () => {
+                    const now = Date.now();
+                    mediaItems = request.result.filter(item => {
+                        if (now - item.timestamp > TEN_MINUTES) {
+                            deleteFromDB(item.id); // 刪除過期檔案
+                            return false;
+                        }
+                        return true;
+                    });
+                    // 依照時間新到舊排序
+                    mediaItems.sort((a, b) => b.timestamp - a.timestamp);
+                    renderGallery();
+                };
+            } catch (e) { console.error("資料庫載入失敗，將使用暫存記憶體", e); }
+        }
+
+        function saveToDB(item) {
+            if (!db) return;
+            const tx = db.transaction('media', 'readwrite');
+            tx.objectStore('media').put(item);
+        }
+
+        function deleteFromDB(id) {
+            if (!db) return;
+            const tx = db.transaction('media', 'readwrite');
+            tx.objectStore('media').delete(id);
+        }
+
+        function clearDB() {
+            if (!db) return;
+            const tx = db.transaction('media', 'readwrite');
+            tx.objectStore('media').clear();
+        }
+
+        function addMediaItem(file, type) {
+            const item = {
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                file: file,
+                type: type,
+                timestamp: Date.now(),
+                filename: file.name
+            };
+            mediaItems.unshift(item); // 加到最前面
+            saveToDB(item);
+            renderGallery();
+            showToast(`已存入紀錄庫 (${type==='image'?'照片':'影片'}保留10分鐘)`);
+        }
+
+        // 每秒更新倒數計時器
+        setInterval(() => {
+            const now = Date.now();
+            let needsRender = false;
+            
+            mediaItems = mediaItems.filter(item => {
+                const timeLeft = item.timestamp + TEN_MINUTES - now;
+                if (timeLeft <= 0) {
+                    deleteFromDB(item.id);
+                    needsRender = true;
+                    return false;
+                } else {
+                    const badge = document.getElementById(`timer-${item.id}`);
+                    if (badge) {
+                        const mins = Math.floor(timeLeft / 60000);
+                        const secs = Math.floor((timeLeft % 60000) / 1000);
+                        badge.innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
+                    }
+                    return true;
+                }
+            });
+            if (needsRender) renderGallery();
+        }, 1000);
+
+        // 載入網頁時自動讀取資料庫
+        document.addEventListener('DOMContentLoaded', loadMediaFromDB);
+
+        // ========== 紀錄庫 UI 與多選邏輯 ==========
+        const galleryContainer = document.getElementById('gallery');
+        const bulkActions = document.getElementById('bulkActions');
+        const toggleSelectModeBtn = document.getElementById('toggleSelectModeBtn');
+        
+        function renderGallery() {
+            galleryContainer.innerHTML = '';
+            if (mediaItems.length === 0) {
+                galleryContainer.innerHTML = '<p style="color:#999; grid-column: 1/-1; text-align:center;">目前沒有暫存紀錄</p>';
+                return;
+            }
+
+            // 更新多選模式的樣式
+            if (isSelectMode) galleryContainer.parentElement.classList.add('select-mode-on');
+            else galleryContainer.parentElement.classList.remove('select-mode-on');
+
+            mediaItems.forEach(item => {
+                const url = URL.createObjectURL(item.file);
+                const div = document.createElement('div');
+                div.className = 'gallery-item';
+                div.id = `media-${item.id}`;
+                
+                // 點擊事件 (區分多選與一般檢視)
+                div.onclick = () => {
+                    if (isSelectMode) {
+                        div.classList.toggle('selected');
+                    } else {
+                        openModal(url, item.type);
+                    }
+                };
+
+                const mediaTag = item.type === 'image' 
+                    ? `<img src="${url}">` 
+                    : `<video src="${url}" preload="metadata"></video>`;
+
+                div.innerHTML = `
+                    ${mediaTag}
+                    <div class="timer-badge" id="timer-${item.id}">10:00</div>
+                    <div class="select-overlay"></div>
+                    <button class="indiv-save-btn" onclick="event.stopPropagation(); saveIndividual('${item.id}')">單獨存檔</button>
+                `;
+                galleryContainer.appendChild(div);
+            });
+        }
+
+        window.saveIndividual = async function(id) {
+            const item = mediaItems.find(i => i.id === id);
+            if (!item) return;
+            if (navigator.canShare && navigator.canShare({ files: [item.file] })) { 
+                try { await navigator.share({ files: [item.file] }); } catch (e) {} 
+            } else { 
+                const url = URL.createObjectURL(item.file);
+                const link = document.createElement('a'); link.href = url; link.download = item.filename; 
+                document.body.appendChild(link); link.click(); document.body.removeChild(link); 
+            }
+        };
+
+        toggleSelectModeBtn.addEventListener('click', () => {
+            isSelectMode = !isSelectMode;
+            if (isSelectMode) {
+                toggleSelectModeBtn.innerText = '完成管理';
+                toggleSelectModeBtn.style.background = '#E67E22';
+                bulkActions.style.display = 'flex';
+            } else {
+                toggleSelectModeBtn.innerText = '☑️ 多選模式';
+                toggleSelectModeBtn.style.background = '#34495E';
+                bulkActions.style.display = 'none';
+                // 取消所有選取
+                document.querySelectorAll('.gallery-item.selected').forEach(el => el.classList.remove('selected'));
+            }
+            renderGallery();
+        });
+
+        document.getElementById('deleteSelectedBtn').addEventListener('click', () => {
+            const selectedEls = document.querySelectorAll('.gallery-item.selected');
+            if (selectedEls.length === 0) { alert('請先點選要刪除的檔案'); return; }
+            if (confirm(`確定要刪除這 ${selectedEls.length} 個檔案嗎？`)) {
+                selectedEls.forEach(el => {
+                    const id = el.id.replace('media-', '');
+                    mediaItems = mediaItems.filter(i => i.id !== id);
+                    deleteFromDB(id);
+                });
+                renderGallery();
+            }
+        });
+
+        document.getElementById('saveSelectedBtn').addEventListener('click', async () => {
+            const selectedEls = document.querySelectorAll('.gallery-item.selected');
+            if (selectedEls.length === 0) { alert('請先點選要儲存的檔案'); return; }
+            
+            const filesToSave = [];
+            selectedEls.forEach(el => {
+                const id = el.id.replace('media-', '');
+                const item = mediaItems.find(i => i.id === id);
+                if (item) filesToSave.push(item.file);
+            });
+
+            if (navigator.canShare && navigator.canShare({ files: filesToSave })) {
+                try { await navigator.share({ files: filesToSave, title: '儲存選取的射箭紀錄' }); } catch (e) {}
+            } else {
+                // 依序觸發下載
+                filesToSave.forEach(file => {
+                    const url = URL.createObjectURL(file); 
+                    const link = document.createElement('a'); link.href = url; link.download = file.name; 
+                    document.body.appendChild(link); link.click(); document.body.removeChild(link); 
+                });
+            }
+            
+            // 儲存後自動關閉多選模式
+            toggleSelectModeBtn.click();
+        });
+
+        document.getElementById('deleteAllBtn').addEventListener('click', () => {
+            if (mediaItems.length === 0) return;
+            if (confirm('⚠️ 警告：確定要清空紀錄庫裡的所有照片與影片嗎？')) {
+                mediaItems = [];
+                clearDB();
+                renderGallery();
+                showToast('紀錄庫已清空');
+            }
+        });
+
+        // ========== 原本的基礎邏輯 ==========
         const openMenuBtn = document.getElementById('openMenuBtn');
         const closeMenuBtn = document.getElementById('closeMenuBtn');
         const sideMenu = document.getElementById('sideMenu');
@@ -336,13 +594,8 @@
         const menuGalleryBtn = document.getElementById('menuGalleryBtn');
 
         function toggleMenu(show) {
-            if (show) {
-                sideMenu.classList.add('open');
-                menuOverlay.style.display = 'block';
-            } else {
-                sideMenu.classList.remove('open');
-                menuOverlay.style.display = 'none';
-            }
+            if (show) { sideMenu.classList.add('open'); menuOverlay.style.display = 'block'; } 
+            else { sideMenu.classList.remove('open'); menuOverlay.style.display = 'none'; }
         }
 
         openMenuBtn.addEventListener('click', () => toggleMenu(true));
@@ -350,13 +603,11 @@
         menuOverlay.addEventListener('click', () => toggleMenu(false));
 
         menuScoreBtn.addEventListener('click', () => {
-            toggleMenu(false);
-            document.getElementById('scoreModalUI').style.display = 'flex';
+            toggleMenu(false); document.getElementById('scoreModalUI').style.display = 'flex';
         });
 
         menuGalleryBtn.addEventListener('click', () => {
-            toggleMenu(false);
-            document.getElementById('galleryModalUI').style.display = 'flex';
+            toggleMenu(false); document.getElementById('galleryModalUI').style.display = 'flex';
         });
 
         document.getElementById('closeGalleryModal').addEventListener('click', () => {
@@ -365,8 +616,7 @@
 
         function showToast(msg) {
             const toast = document.getElementById('toastMsg');
-            toast.innerText = msg;
-            toast.style.display = 'block';
+            toast.innerText = msg; toast.style.display = 'block';
             setTimeout(() => { toast.style.display = 'none'; }, 2500);
         }
 
@@ -386,38 +636,28 @@
         let cameraStream = null;
         let isProcessingAI = false;
 
-        let capturedFilesArray = [];
-
         function isStraight(p1, p2, p3) {
-            const v1 = { x: p2.x - p1.x, y: p2.y - p1.y };
-            const v2 = { x: p3.x - p2.x, y: p3.y - p2.y };
-            const norm1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
-            const norm2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
+            const v1 = { x: p2.x - p1.x, y: p2.y - p1.y }; const v2 = { x: p3.x - p2.x, y: p3.y - p2.y };
+            const norm1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y); const norm2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
             if (norm1 === 0 || norm2 === 0) return false;
             let cosAngle = (v1.x * v2.x + v1.y * v2.y) / (norm1 * norm2);
-            cosAngle = Math.max(-1.0, Math.min(1.0, cosAngle));
-            return cosAngle < -0.96;
+            return Math.max(-1.0, Math.min(1.0, cosAngle)) < -0.96;
         }
 
         const pose = new Pose({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`});
         pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.7, minTrackingConfidence: 0.7 });
 
         pose.onResults((results) => {
-            canvasElement.width = results.image.width; 
-            canvasElement.height = results.image.height;
-            const w = canvasElement.width; 
-            const h = canvasElement.height;
-            
-            canvasCtx.save(); 
-            canvasCtx.clearRect(0, 0, w, h); 
-            canvasCtx.drawImage(results.image, 0, 0, w, h);
+            canvasElement.width = results.image.width; canvasElement.height = results.image.height;
+            const w = canvasElement.width; const h = canvasElement.height;
+            canvasCtx.save(); canvasCtx.clearRect(0, 0, w, h); canvasCtx.drawImage(results.image, 0, 0, w, h);
 
             if (results.poseLandmarks) {
                 const lm = results.poseLandmarks;
                 const drawLine = (pt1, pt2, color, thickness) => { canvasCtx.beginPath(); canvasCtx.moveTo(pt1.x * w, pt1.y * h); canvasCtx.lineTo(pt2.x * w, pt2.y * h); canvasCtx.strokeStyle = color; canvasCtx.lineWidth = thickness; canvasCtx.stroke(); };
                 const drawCircle = (pt, radius, color) => { canvasCtx.beginPath(); canvasCtx.arc(pt.x * w, pt.y * h, radius, 0, 2 * Math.PI); canvasCtx.fillStyle = color; canvasCtx.fill(); };
 
-                const noseX = lm[0].x * w; drawLine({x: lm[0].x, y: 0}, {x: lm[0].x, y: 1}, 'rgb(135, 206, 235)', 2); drawCircle(lm[0], 8, 'rgb(135, 206, 235)');
+                drawLine({x: lm[0].x, y: 0}, {x: lm[0].x, y: 1}, 'rgb(135, 206, 235)', 2); drawCircle(lm[0], 8, 'rgb(135, 206, 235)');
                 const upperMidX = (lm[11].x + lm[12].x) / 2; const lowerMidX = (lm[23].x + lm[24].x) / 2; drawLine({x: upperMidX, y: 0}, {x: lowerMidX, y: 1}, 'rgb(0, 100, 255)', 3);
                 [[11, 23], [12, 24], [23, 24], [11, 12]].forEach(([p1, p2]) => { drawLine(lm[p1], lm[p2], 'rgb(100, 100, 100)', 2); drawCircle(lm[p1], 6, 'rgb(150, 150, 150)'); drawCircle(lm[p2], 6, 'rgb(150, 150, 150)'); });
 
@@ -436,7 +676,6 @@
                     canvasCtx.fillText(remaining, w * 0.05, h * 0.15); canvasCtx.strokeText(remaining, w * 0.05, h * 0.15);
                 } else { isCounting = false; capturePhoto(); }
             }
-            
             if (isRecording) { canvasCtx.beginPath(); canvasCtx.arc(w - (w * 0.05), h * 0.05, 20, 0, 2 * Math.PI); canvasCtx.fillStyle = "red"; canvasCtx.fill(); }
             canvasCtx.restore();
         });
@@ -446,11 +685,10 @@
             const constraints = { video: { facingMode: cameraMode, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 120, min: 60 } } };
             try {
                 cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
-                videoElement.srcObject = cameraStream;
-                await videoElement.play();
+                videoElement.srcObject = cameraStream; await videoElement.play();
                 pose.setOptions({ selfieMode: cameraMode === 'user' });
                 if (!isProcessingAI) { isProcessingAI = true; processVideoFrame(); }
-            } catch (error) { console.error("相機啟動失敗:", error); alert("無法存取高畫質相機。"); }
+            } catch (error) { alert("無法存取高畫質相機。"); }
         }
         
         async function processVideoFrame() {
@@ -469,15 +707,8 @@
         const secLabel = document.getElementById('secLabel');
 
         photoModeToggle.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                modeLabel.innerText = '倒數';
-                timerInput.style.display = 'inline-block';
-                secLabel.style.display = 'inline-block';
-            } else {
-                modeLabel.innerText = '立即';
-                timerInput.style.display = 'none';
-                secLabel.style.display = 'none';
-            }
+            if (e.target.checked) { modeLabel.innerText = '倒數'; timerInput.style.display = 'inline-block'; secLabel.style.display = 'inline-block'; } 
+            else { modeLabel.innerText = '立即'; timerInput.style.display = 'none'; secLabel.style.display = 'none'; }
         });
 
         document.getElementById('actionShootBtn').addEventListener('click', () => {
@@ -485,9 +716,7 @@
                 const val = parseInt(timerInput.value);
                 if (isNaN(val) || val <= 0) { alert("請輸入有效的秒數"); return; }
                 countdownVal = val; isCounting = true; countdownStartTime = Date.now();
-            } else {
-                capturePhoto();
-            }
+            } else { capturePhoto(); }
         });
 
         document.getElementById('recordBtn').addEventListener('click', () => {
@@ -519,8 +748,7 @@
         }
 
         function openModal(src, type) {
-            const modal = document.getElementById('mediaModal');
-            const content = document.getElementById('modalContent');
+            const modal = document.getElementById('mediaModal'); const content = document.getElementById('modalContent');
             content.innerHTML = ''; 
             if (type === 'image') { const img = document.createElement('img'); img.src = src; content.appendChild(img); } 
             else { const vid = document.createElement('video'); vid.src = src; vid.controls = true; vid.autoplay = true; content.appendChild(vid); }
@@ -533,71 +761,28 @@
             const dataURL = canvasElement.toDataURL('image/jpeg', 1.0);
             const now = new Date();
             const filename = `archery_photo_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.jpg`;
-            const file = dataURLtoFile(dataURL, filename);
-            capturedFilesArray.push(file);
-
-            const itemDiv = document.createElement('div'); itemDiv.className = 'gallery-item';
-            const img = document.createElement('img'); img.src = dataURL; img.onclick = () => openModal(dataURL, 'image');
-            const dlBtn = document.createElement('button'); dlBtn.innerText = '單獨存檔';
-            dlBtn.onclick = async () => {
-                if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file] }); } catch (e) {} } 
-                else { const link = document.createElement('a'); link.href = dataURL; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); }
-            };
-            itemDiv.appendChild(img); itemDiv.appendChild(dlBtn);
-            const gallery = document.getElementById('gallery'); gallery.insertBefore(itemDiv, gallery.firstChild);
-            
-            showToast('📸 照片已存入紀錄庫');
+            addMediaItem(dataURLtoFile(dataURL, filename), 'image');
         }
 
         function saveVideoToGallery() {
             const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'video/mp4' });
-            const videoURL = URL.createObjectURL(blob);
             const now = new Date();
             const ext = blob.type.includes('mp4') ? 'mp4' : 'webm';
             const filename = `archery_video_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.${ext}`;
-            const file = new File([blob], filename, { type: blob.type });
-            capturedFilesArray.push(file);
-
-            const itemDiv = document.createElement('div'); itemDiv.className = 'gallery-item';
-            const vid = document.createElement('video'); vid.src = videoURL; vid.onclick = () => openModal(videoURL, 'video');
-            const dlBtn = document.createElement('button'); dlBtn.className = 'vid-btn'; dlBtn.innerText = '單獨存檔';
-            dlBtn.onclick = async () => {
-                if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file] }); } catch (e) {} } 
-                else { const link = document.createElement('a'); link.href = videoURL; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); }
-            };
-            itemDiv.appendChild(vid); itemDiv.appendChild(dlBtn);
-            const gallery = document.getElementById('gallery'); gallery.insertBefore(itemDiv, gallery.firstChild);
-            
-            showToast('🎥 影片已存入紀錄庫');
+            addMediaItem(new File([blob], filename, { type: blob.type }), 'video');
         }
 
-        document.getElementById('saveAllBtn').addEventListener('click', async () => {
-            if (capturedFilesArray.length === 0) { alert('目前還沒有任何紀錄喔！'); return; }
-            if (navigator.canShare && navigator.canShare({ files: capturedFilesArray })) {
-                try { await navigator.share({ files: capturedFilesArray, title: '射箭動作紀錄批次存檔' }); } catch (e) {}
-            } else {
-                capturedFilesArray.forEach(file => {
-                    const url = URL.createObjectURL(file); const link = document.createElement('a');
-                    link.href = url; link.download = file.name; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
-                });
-            }
-        });
-
-        // ========== 計分系統邏輯 (新增點擊跳轉與覆蓋功能) ==========
+        // ========== 計分系統邏輯 ==========
         let scoreData = [];
         let totalEnds = 6;
         let arrowsPerEnd = 6;
         let currentEndIndex = 0;
         let currentArrowIndex = 0;
 
-        document.getElementById('closeScoreModal').addEventListener('click', () => {
-            document.getElementById('scoreModalUI').style.display = 'none';
-        });
+        document.getElementById('closeScoreModal').addEventListener('click', () => { document.getElementById('scoreModalUI').style.display = 'none'; });
 
         const tabs = ['Setup', 'Scoring', 'History'];
-        tabs.forEach(tab => {
-            document.getElementById(`tab${tab}`).addEventListener('click', () => switchTab(tab));
-        });
+        tabs.forEach(tab => { document.getElementById(`tab${tab}`).addEventListener('click', () => switchTab(tab)); });
 
         function switchTab(activeTab) {
             tabs.forEach(tab => {
@@ -613,10 +798,8 @@
             totalEnds = parseInt(document.getElementById('inputEnds').value) || 6;
             arrowsPerEnd = parseInt(document.getElementById('inputArrows').value) || 6;
             scoreData = Array.from({ length: totalEnds }, () => Array(arrowsPerEnd).fill(null));
-            currentEndIndex = 0;
-            currentArrowIndex = 0;
-            renderScoreTable();
-            switchTab('Scoring');
+            currentEndIndex = 0; currentArrowIndex = 0;
+            renderScoreTable(); switchTab('Scoring');
         });
 
         document.getElementById('resetScoreBtn').addEventListener('click', () => {
@@ -624,41 +807,28 @@
         });
 
         function parseScore(val) {
-            if (val === 'X') return 10;
-            if (val === 'M' || val === null) return 0;
+            if (val === 'X') return 10; if (val === 'M' || val === null) return 0;
             return parseInt(val) || 0;
         }
 
-        // 綁定全域函數給 HTML onClick 使用
         window.setActiveCell = function(endIdx, arrowIdx) {
-            currentEndIndex = endIdx;
-            currentArrowIndex = arrowIdx;
-            renderScoreTable();
+            currentEndIndex = endIdx; currentArrowIndex = arrowIdx; renderScoreTable();
         };
 
         function renderScoreTable() {
-            const table = document.getElementById('scoreTable');
-            table.innerHTML = '';
-            
+            const table = document.getElementById('scoreTable'); table.innerHTML = '';
             let thead = '<tr><th>趟</th>';
             for (let i = 1; i <= arrowsPerEnd; i++) thead += `<th>${i}</th>`;
-            thead += '<th>小計</th></tr>';
-            table.innerHTML += thead;
+            thead += '<th>小計</th></tr>'; table.innerHTML += thead;
 
             let grandTotal = 0;
-
             for (let e = 0; e < totalEnds; e++) {
                 let rowHtml = `<tr><td><b>${e + 1}</b></td>`;
                 let endTotal = 0;
-
                 for (let a = 0; a < arrowsPerEnd; a++) {
                     const val = scoreData[e][a];
                     endTotal += parseScore(val);
-                    
-                    // 判斷是否為目前焦點框
                     let activeClass = (e === currentEndIndex && a === currentArrowIndex) ? 'active-cell' : '';
-                    
-                    // 修改：加入 score-cell 樣式與點擊事件，讓使用者可以隨時點擊跳轉到該格
                     rowHtml += `<td class="score-cell ${activeClass}" onclick="setActiveCell(${e}, ${a})">${val !== null ? val : ''}</td>`;
                 }
                 grandTotal += endTotal;
@@ -668,28 +838,16 @@
             document.getElementById('grandTotal').innerText = grandTotal;
         }
 
-        // 綁定鍵盤按鈕事件
         ['X', '10', '9', '8', '7', '6', '5', '4', '3', '2', '1', 'M'].forEach(val => {
             document.getElementById(`btnScore${val}`).addEventListener('click', () => inputScore(val));
         });
         document.getElementById('btnScoreUndo').addEventListener('click', undoScore);
 
         function inputScore(val) {
-            if (currentEndIndex >= totalEnds) { 
-                alert('已經射完所有趟數囉！可以儲存成績了。'); 
-                return; 
-            }
-            
-            // 直接覆蓋目前焦點格的資料
+            if (currentEndIndex >= totalEnds) { alert('已經射完所有趟數囉！可以儲存成績了。'); return; }
             scoreData[currentEndIndex][currentArrowIndex] = val;
-            
-            // 自動往下一格移動
             currentArrowIndex++;
-            if (currentArrowIndex >= arrowsPerEnd) { 
-                currentArrowIndex = 0; 
-                currentEndIndex++; 
-            }
-            
+            if (currentArrowIndex >= arrowsPerEnd) { currentArrowIndex = 0; currentEndIndex++; }
             renderScoreTable();
         }
 
@@ -706,80 +864,52 @@
             const now = new Date();
             const defaultName = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} 紀錄`;
             
-            const record = {
-                id: Date.now(),
-                name: defaultName,
-                totalScore: grandTotal,
-                ends: totalEnds,
-                arrows: arrowsPerEnd,
-                data: JSON.parse(JSON.stringify(scoreData)) 
-            };
-
+            const record = { id: Date.now(), name: defaultName, totalScore: grandTotal, ends: totalEnds, arrows: arrowsPerEnd, data: JSON.parse(JSON.stringify(scoreData)) };
             let history = JSON.parse(localStorage.getItem('archeryHistory')) || [];
-            history.unshift(record); 
-            localStorage.setItem('archeryHistory', JSON.stringify(history));
+            history.unshift(record); localStorage.setItem('archeryHistory', JSON.stringify(history));
             
-            showToast('✅ 成績已儲存！');
-            switchTab('History');
+            showToast('✅ 成績已儲存！'); switchTab('History');
         });
 
         function renderHistory() {
             const list = document.getElementById('historyList');
             let history = JSON.parse(localStorage.getItem('archeryHistory')) || [];
-            
             if (history.length === 0) { list.innerHTML = '<div class="no-data">目前沒有歷史紀錄。</div>'; return; }
 
             list.innerHTML = '';
             history.forEach(rec => {
-                const item = document.createElement('div');
-                item.className = 'history-item';
+                const item = document.createElement('div'); item.className = 'history-item';
+                const nameInput = document.createElement('input'); nameInput.value = rec.name;
+                nameInput.addEventListener('change', (e) => {
+                    let h = JSON.parse(localStorage.getItem('archeryHistory')) || [];
+                    const idx = h.findIndex(x => x.id === rec.id);
+                    if (idx !== -1) { h[idx].name = e.target.value; localStorage.setItem('archeryHistory', JSON.stringify(h)); }
+                });
                 
-                const nameInput = document.createElement('input');
-                nameInput.value = rec.name;
-                nameInput.addEventListener('change', (e) => updateHistoryName(rec.id, e.target.value));
-                
-                const summaryDiv = document.createElement('div');
-                summaryDiv.className = 'history-summary';
+                const summaryDiv = document.createElement('div'); summaryDiv.className = 'history-summary';
                 summaryDiv.innerHTML = `<span><b>總分: ${rec.totalScore}</b> (${rec.ends}趟x${rec.arrows}箭)</span>`;
                 
-                const actionsDiv = document.createElement('div');
-                actionsDiv.className = 'history-actions';
+                const actionsDiv = document.createElement('div'); actionsDiv.className = 'history-actions';
 
-                const delBtn = document.createElement('button');
-                delBtn.className = 'del-history-btn';
-                delBtn.innerText = '刪除';
+                const delBtn = document.createElement('button'); delBtn.className = 'del-history-btn'; delBtn.innerText = '刪除';
                 delBtn.addEventListener('click', () => {
                     if(confirm('確定要刪除這筆紀錄嗎？')) {
                         history = history.filter(h => h.id !== rec.id);
-                        localStorage.setItem('archeryHistory', JSON.stringify(history));
-                        renderHistory();
+                        localStorage.setItem('archeryHistory', JSON.stringify(history)); renderHistory();
                     }
                 });
 
-                const exportBtn = document.createElement('button');
-                exportBtn.className = 'export-history-btn';
-                exportBtn.innerText = '🖼️ 轉成相片';
+                const exportBtn = document.createElement('button'); exportBtn.className = 'export-history-btn'; exportBtn.innerText = '🖼️ 轉成相片';
                 exportBtn.addEventListener('click', () => exportScoreToImage(rec.id));
 
-                actionsDiv.appendChild(exportBtn);
-                actionsDiv.appendChild(delBtn);
-                item.appendChild(nameInput);
-                item.appendChild(summaryDiv);
-                item.appendChild(actionsDiv);
-                list.appendChild(item);
+                actionsDiv.appendChild(exportBtn); actionsDiv.appendChild(delBtn);
+                item.appendChild(nameInput); item.appendChild(summaryDiv); item.appendChild(actionsDiv); list.appendChild(item);
             });
-        }
-
-        function updateHistoryName(id, newName) {
-            let history = JSON.parse(localStorage.getItem('archeryHistory')) || [];
-            const index = history.findIndex(h => h.id === id);
-            if (index !== -1) { history[index].name = newName; localStorage.setItem('archeryHistory', JSON.stringify(history)); }
         }
 
         function exportScoreToImage(id) {
             const history = JSON.parse(localStorage.getItem('archeryHistory')) || [];
-            const record = history.find(h => h.id === id);
-            if (!record) return;
+            const record = history.find(h => h.id === id); if (!record) return;
 
             const card = document.getElementById('exportCard');
             document.getElementById('exName').innerText = record.name;
@@ -794,8 +924,7 @@
                 tbody += `<tr><td style="border:1px solid #ccc; padding:8px; font-weight:bold;">${e + 1}</td>`;
                 let endTotal = 0;
                 for (let a = 0; a < record.arrows; a++) {
-                    const val = record.data[e][a];
-                    endTotal += parseScore(val);
+                    const val = record.data[e][a]; endTotal += parseScore(val);
                     tbody += `<td style="border:1px solid #ccc; padding:8px;">${val !== null ? val : ''}</td>`;
                 }
                 tbody += `<td style="border:1px solid #ccc; padding:8px; font-weight:bold;">${endTotal}</td></tr>`;
@@ -803,27 +932,9 @@
             document.getElementById('exTable').innerHTML = thead + tbody;
 
             html2canvas(card, { scale: 2 }).then(canvas => {
-                const dataURL = canvas.toDataURL('image/png');
-                const now = new Date();
+                const dataURL = canvas.toDataURL('image/png'); const now = new Date();
                 const filename = `score_card_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.png`;
-                const file = dataURLtoFile(dataURL, filename);
-                
-                capturedFilesArray.push(file);
-
-                const itemDiv = document.createElement('div'); itemDiv.className = 'gallery-item';
-                const img = document.createElement('img'); img.src = dataURL; img.onclick = () => openModal(dataURL, 'image');
-
-                const dlBtn = document.createElement('button'); dlBtn.innerText = '單獨存檔';
-                dlBtn.onclick = async () => {
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file] }); } catch (e) {} } 
-                    else { const link = document.createElement('a'); link.href = dataURL; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); }
-                };
-
-                itemDiv.appendChild(img); itemDiv.appendChild(dlBtn);
-                const gallery = document.getElementById('gallery'); 
-                gallery.insertBefore(itemDiv, gallery.firstChild);
-                
-                showToast('🎯 成績卡已存入選單內的「媒體紀錄庫」！');
+                addMediaItem(dataURLtoFile(dataURL, filename), 'image');
             });
         }
     </script>
