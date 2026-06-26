@@ -28,24 +28,6 @@
             -webkit-tap-highlight-color: transparent; 
         }
         
-        /* 修改：漢堡選單取消絕對定位，適應在控制框內 */
-        .hamburger-btn {
-            background: #f9f9f9;
-            padding: 8px 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-around;
-            height: 38px;
-            width: 42px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            flex-shrink: 0;
-        }
-        .hamburger-btn div { width: 100%; height: 3px; background-color: #333; border-radius: 2px; }
-        .hamburger-btn:active { background: #e0e0e0; }
-        
         /* 側邊選單與遮罩 */
         .menu-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9998; backdrop-filter: blur(2px); }
         .side-menu {
@@ -69,23 +51,48 @@
             font-weight: bold; z-index: 10000; box-shadow: 0 4px 6px rgba(0,0,0,0.2); font-size: 14px;
         }
 
-        /* 修改：讓控制列恢復置中，內部使用 flex 排列 */
+        /* 修改：徹底穩定控制面板佈局，確保漢堡選單在框內 */
         .controls { 
             background: white; 
             padding: 10px; 
             border-radius: 8px; 
-            margin: 10px auto; /* 恢復置中 */
+            margin: 10px auto; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
-            width: 92%; 
+            width: 95%; 
             max-width: 450px; 
             flex-shrink: 0; 
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 10px;
+            gap: 8px;
+            box-sizing: border-box;
         }
         
-        .controls button { padding: 8px 10px; margin: 0; cursor: pointer; font-size: 14px; border-radius: 5px; border: 1px solid #ccc; font-weight: bold; }
+        .controls-row {
+            display: flex;
+            align-items: stretch;
+            justify-content: space-between;
+            width: 100%;
+            gap: 8px;
+        }
+
+        .hamburger-btn {
+            background: #f9f9f9;
+            padding: 8px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            width: 45px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            flex-shrink: 0;
+            margin: 0;
+        }
+        .hamburger-btn div { width: 100%; height: 3px; background-color: #333; border-radius: 2px; }
+        .hamburger-btn:active { background: #e0e0e0; }
+        
+        .controls button { padding: 8px 5px; margin: 0; cursor: pointer; font-size: 14px; border-radius: 5px; border: 1px solid #ccc; font-weight: bold; flex-grow: 1; }
         
         #recordBtn { background-color: #2ECC71; color: white; border: none; }
         #recordBtn.recording { background-color: #E74C3C; animation: pulse 1.5s infinite; }
@@ -96,8 +103,8 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        .switch-container { display: flex; align-items: center; justify-content: flex-end; gap: 6px; width: 100%; flex-wrap: wrap; }
-        .switch { position: relative; display: inline-block; width: 42px; height: 24px; }
+        .mode-container { display: flex; align-items: center; justify-content: center; gap: 5px; background: #f9f9f9; border: 1px solid #ccc; border-radius: 8px; padding: 0 8px; flex-grow: 2; }
+        .switch { position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
         .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
@@ -138,7 +145,7 @@
 
         /* 計分系統專用樣式 */
         #scoreModalUI { display: none; position: fixed; z-index: 10001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); flex-direction: column; justify-content: flex-start; align-items: center; overflow-y: auto; padding-top: calc(20px + env(safe-area-inset-top)); padding-bottom: 20px;}
-        .score-container { background: white; width: 90%; max-width: 500px; border-radius: 8px; margin: 0 auto; padding: 15px; box-sizing: border-box; text-align: center; }
+        .score-container { background: white; width: 95%; max-width: 500px; border-radius: 8px; margin: 0 auto; padding: 15px; box-sizing: border-box; text-align: center; }
         .score-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
         .score-nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 5px; }
         .score-nav button { padding: 8px 12px; cursor: pointer; background: #eee; border: 1px solid #ccc; border-radius: 5px; font-weight: bold; flex-grow: 1;}
@@ -152,7 +159,12 @@
         .score-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 16px; }
         .score-table th, .score-table td { border: 1px solid #ddd; padding: 8px 4px; min-width: 30px; }
         .score-table th { background: #f9f9f9; }
-        .score-table td.active-cell { background-color: #FFF3CD; border: 2px solid #E67E22; box-shadow: inset 0 0 5px rgba(230,126,34,0.5); font-weight: bold; }
+        
+        /* 修改：讓計分格可以點擊，加上 hover 提示 */
+        .score-table td.score-cell { cursor: pointer; transition: background 0.2s; }
+        .score-table td.score-cell:active { background-color: #e0e0e0; }
+        .score-table td.active-cell { background-color: #FFF3CD !important; border: 2px solid #E67E22; box-shadow: inset 0 0 5px rgba(230,126,34,0.5); font-weight: bold; }
+        
         .total-text { font-weight: bold; color: #E74C3C; font-size: 18px; margin-bottom: 10px; }
         
         .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
@@ -183,10 +195,8 @@
 </head>
 <body>
 
-    <!-- 提示框 -->
     <div id="toastMsg" class="toast-msg">已存入紀錄庫</div>
 
-    <!-- 側邊選單與遮罩 -->
     <div class="menu-overlay" id="menuOverlay"></div>
     <div class="side-menu" id="sideMenu">
         <span class="close-menu-btn" id="closeMenuBtn">&times;</span>
@@ -195,36 +205,30 @@
         <button id="menuGalleryBtn">📸 媒體紀錄庫</button>
     </div>
 
-    <!-- 整合漢堡選單的控制面板 -->
     <div class="controls">
-        <!-- 第一列：漢堡選單 ＋ 拍照功能區 -->
-        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-            
-            <!-- 漢堡按鈕移入這裡 -->
+        <div class="controls-row">
             <div class="hamburger-btn" id="openMenuBtn">
                 <div></div>
                 <div></div>
                 <div></div>
             </div>
-
-            <div class="switch-container">
-                <button id="actionShootBtn" style="background-color: #3498DB; color: white; border: none; padding: 8px 12px;">📸 拍照</button>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                    <label class="switch">
-                        <input type="checkbox" id="photoModeToggle">
-                        <span class="slider round"></span>
-                    </label>
-                    <span id="modeLabel" style="font-size: 14px; font-weight: bold; color: #333;">立即</span>
-                    <input type="number" id="timerInput" value="5" style="display: none;">
-                    <span id="secLabel" style="display: none; font-size: 14px; font-weight: bold; color: #333;">秒</span>
-                </div>
+            
+            <button id="actionShootBtn" style="background-color: #3498DB; color: white; border: none;">📸 拍照</button>
+            
+            <div class="mode-container">
+                <label class="switch">
+                    <input type="checkbox" id="photoModeToggle">
+                    <span class="slider round"></span>
+                </label>
+                <span id="modeLabel" style="font-size: 14px; font-weight: bold; color: #333;">立即</span>
+                <input type="number" id="timerInput" value="5" style="display: none;">
+                <span id="secLabel" style="display: none; font-size: 14px; font-weight: bold; color: #333;">秒</span>
             </div>
         </div>
         
-        <!-- 第二列：錄影與翻轉鏡頭 -->
-        <div style="display: flex; gap: 8px; width: 100%; justify-content: center;">
-            <button id="recordBtn" style="flex-grow: 1;">🎥 開始錄影</button>
-            <button id="switchCamBtn" style="flex-grow: 1;">🔄 翻轉鏡頭</button>
+        <div class="controls-row">
+            <button id="recordBtn">🎥 開始錄影</button>
+            <button id="switchCamBtn">🔄 翻轉鏡頭</button>
         </div>
     </div>
     
@@ -233,7 +237,6 @@
         <canvas id="outputCanvas"></canvas>
     </div>
 
-    <!-- 紀錄庫滿版視窗 -->
     <div id="galleryModalUI">
         <div class="gallery-container" id="galleryContainer">
             <div class="gallery-header">
@@ -252,7 +255,6 @@
         <div class="modal-content-wrapper" id="modalContent"></div>
     </div>
 
-    <!-- 計分系統介面 -->
     <div id="scoreModalUI">
         <div class="score-container">
             <div class="score-header">
@@ -282,6 +284,7 @@
 
             <div id="sectionScoring" style="display: none;">
                 <div class="total-text">總分: <span id="grandTotal">0</span></div>
+                <p style="font-size: 12px; color: #888; margin-top: -5px; margin-bottom: 10px;">💡 提示：點擊下方表格的格子可以直接跳過去修改成績。</p>
                 <div class="score-grid">
                     <table class="score-table" id="scoreTable"></table>
                 </div>
@@ -314,7 +317,6 @@
         </div>
     </div>
 
-    <!-- 隱藏的成績單模板 -->
     <div id="exportCardWrapper" style="position: absolute; top: -9999px; left: -9999px; z-index: -1;">
         <div id="exportCard" style="background: white; padding: 20px; border-radius: 10px; min-width: 400px; color: black; font-family: Arial; text-align: center;">
             <h2 id="exName" style="margin-top:0; border-bottom: 2px solid #ccc; padding-bottom: 10px;"></h2>
@@ -325,8 +327,6 @@
     </div>
 
     <script>
-        // ========== 使用 addEventListener 確保手機 iOS 的觸控支援 ==========
-        
         // 漢堡選單邏輯
         const openMenuBtn = document.getElementById('openMenuBtn');
         const closeMenuBtn = document.getElementById('closeMenuBtn');
@@ -363,7 +363,6 @@
             document.getElementById('galleryModalUI').style.display = 'none';
         });
 
-        // Toast 提示邏輯
         function showToast(msg) {
             const toast = document.getElementById('toastMsg');
             toast.innerText = msg;
@@ -371,7 +370,7 @@
             setTimeout(() => { toast.style.display = 'none'; }, 2500);
         }
 
-        // ========== 原本相機核心邏輯 ==========
+        // 相機核心邏輯
         const videoElement = document.getElementById('videoElement');
         const canvasElement = document.getElementById('outputCanvas');
         const canvasCtx = canvasElement.getContext('2d');
@@ -584,7 +583,7 @@
             }
         });
 
-        // ========== 計分系統邏輯 ==========
+        // ========== 計分系統邏輯 (新增點擊跳轉與覆蓋功能) ==========
         let scoreData = [];
         let totalEnds = 6;
         let arrowsPerEnd = 6;
@@ -630,6 +629,13 @@
             return parseInt(val) || 0;
         }
 
+        // 綁定全域函數給 HTML onClick 使用
+        window.setActiveCell = function(endIdx, arrowIdx) {
+            currentEndIndex = endIdx;
+            currentArrowIndex = arrowIdx;
+            renderScoreTable();
+        };
+
         function renderScoreTable() {
             const table = document.getElementById('scoreTable');
             table.innerHTML = '';
@@ -648,8 +654,12 @@
                 for (let a = 0; a < arrowsPerEnd; a++) {
                     const val = scoreData[e][a];
                     endTotal += parseScore(val);
-                    let isActive = (e === currentEndIndex && a === currentArrowIndex) ? 'class="active-cell"' : '';
-                    rowHtml += `<td ${isActive}>${val !== null ? val : ''}</td>`;
+                    
+                    // 判斷是否為目前焦點框
+                    let activeClass = (e === currentEndIndex && a === currentArrowIndex) ? 'active-cell' : '';
+                    
+                    // 修改：加入 score-cell 樣式與點擊事件，讓使用者可以隨時點擊跳轉到該格
+                    rowHtml += `<td class="score-cell ${activeClass}" onclick="setActiveCell(${e}, ${a})">${val !== null ? val : ''}</td>`;
                 }
                 grandTotal += endTotal;
                 rowHtml += `<td><b>${endTotal}</b></td></tr>`;
@@ -665,10 +675,21 @@
         document.getElementById('btnScoreUndo').addEventListener('click', undoScore);
 
         function inputScore(val) {
-            if (currentEndIndex >= totalEnds) { alert('已經射完所有趟數囉！可以儲存成績了。'); return; }
+            if (currentEndIndex >= totalEnds) { 
+                alert('已經射完所有趟數囉！可以儲存成績了。'); 
+                return; 
+            }
+            
+            // 直接覆蓋目前焦點格的資料
             scoreData[currentEndIndex][currentArrowIndex] = val;
+            
+            // 自動往下一格移動
             currentArrowIndex++;
-            if (currentArrowIndex >= arrowsPerEnd) { currentArrowIndex = 0; currentEndIndex++; }
+            if (currentArrowIndex >= arrowsPerEnd) { 
+                currentArrowIndex = 0; 
+                currentEndIndex++; 
+            }
+            
             renderScoreTable();
         }
 
