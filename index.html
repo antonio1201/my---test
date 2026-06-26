@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#f0f0f0">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3069/3069186.png">
+
+    <title>射箭動作線性觀察與控制系統</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #f0f0f0; margin: 0; padding: 5px; padding-top: env(safe-area-inset-top); }
+        .controls { background: white; padding: 10px; border-radius: 8px; display: inline-block; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); width: 95%; max-width: 450px; }
+        .controls input { width: 40px; text-align: center; font-size: 16px; margin-right: 5px; }
+        .controls button { padding: 8px 10px; margin: 2px; cursor: pointer; font-size: 14px; border-radius: 5px; border: 1px solid #ccc; font-weight: bold; }
+        
+        #recordBtn { background-color: #2ECC71; color: white; border: none; }
+        #recordBtn.recording { background-color: #E74C3C; animation: pulse 1.5s infinite; }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .canvas-container { position: relative; display: flex; justify-content: center; width: 100%; }
+        video { display: none; } 
+        canvas { background-color: #000; border: 2px solid #333; border-radius: 8px; width: 100%; max-width: 100%; height: auto; max-height: 55vh; object-fit: contain; }
+        
+        .gallery-container { margin-top: 15px; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); width: 95%; max-width: 600px; display: inline-block; text-align: left; overflow-x: auto; white-space: nowrap; }
+        .gallery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .gallery-title { margin: 0; font-size: 16px; color: #333; font-weight: bold; }
+        .save-all-btn { background-color: #F1C40F; color: #333; border: none; padding: 5px 12px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
+        .gallery-item { display: inline-block; margin-right: 15px; text-align: center; vertical-align: top; }
+        .gallery-item img, .gallery-item video { height: 120px; border-radius: 5px; border: 1px solid #ddd; display: block; margin-bottom: 5px; background: black; cursor: pointer; object-fit: cover; }
+        .gallery-item button { padding: 5px 10px; font-size: 12px; cursor: pointer; background-color: #3498DB; color: white; border: none; border-radius: 3px; }
+        .gallery-item .vid-btn { background-color: #9B59B6; }
+
+        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); flex-direction: column; justify-content: center; align-items: center; }
+        .modal-content-wrapper { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; }
+        .modal img, .modal video { max-width: 95vw; max-height: 85vh; border-radius: 8px; object-fit: contain; }
+        .close-modal { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 10000; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <label>秒數: <input type="number" id="timerInput" value="5"></label>
+        <button id="countdownBtn">倒數拍照</button>
+        <button id="shootBtn">立即拍照</button>
+        <button id="recordBtn">開始錄影</button>
+        <button id="switchCamBtn">翻轉鏡頭</button>
+    </div>
+    <div class="canvas-container">
+        <video id="videoElement" autoplay playsinline></video>
+        <canvas id="outputCanvas"></canvas>
+    </div>
+
+    <div class="gallery-container" id="galleryContainer" style="display: none;">
+        <div class="gallery-header">
+            <p class="gallery-title">📸 高畫質紀錄庫</p>
+            <button class="save-all-btn" id="saveAllBtn">✨ 一鍵存檔 (全部)</button>
+        </div>
+        <div id="gallery"></div>
+    </div>
+
+    <div id="mediaModal" class="modal">
+        <span class="close-modal" id="closeModal">&times;</span>
+        <div class="modal-content-wrapper" id="modalContent"></div>
+    </div>
+
+    <script>
+        const videoElement = document.getElementById('videoElement');
+        const canvasElement = document.getElementById('outputCanvas');
+        const canvasCtx = canvasElement.getContext('2d');
+        
+        let cameraMode = 'user'; 
+        let isCounting = false;
+        let countdownVal = 0;
+        let countdownStartTime = 0;
+
+        let mediaRecorder;
+        let recordedChunks = [];
+        let isRecording = false;
+        let cameraStream = null;
+        let isProcessingAI = false;
+
+        let capturedFilesArray = [];
+
+        function isStraight(p1, p2, p3) {
+            const v1 = { x: p2.x - p1.x, y: p2.y - p1.y };
+            const v2 = { x: p3.x - p2.x, y: p3.y - p2.y };
+            const norm1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
+            const norm2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
+            if (norm1 === 0 || norm2 === 0) return false;
+            let cosAngle = (v1.x * v2.x + v1.y * v2.y) / (norm1 * norm2);
+            cosAngle = Math.max(-1.0, Math.min(1.0, cosAngle));
+            return cosAngle < -0.96;
+        }
+
+        const pose = new Pose({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`});
+        pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.7, minTrackingConfidence: 0.7 });
+
+        pose.onResults((results) => {
+            canvasElement.width = results.image.width; 
+            canvasElement.height = results.image.height;
+            const w = canvasElement.width; 
+            const h = canvasElement.height;
+            
+            canvasCtx.save(); 
+            canvasCtx.clearRect(0, 0, w, h); 
+            canvasCtx.drawImage(results.image, 0, 0, w, h);
+
+            if (results.poseLandmarks) {
+                const lm = results.poseLandmarks;
+                const drawLine = (pt1, pt2, color, thickness) => { canvasCtx.beginPath(); canvasCtx.moveTo(pt1.x * w, pt1.y * h); canvasCtx.lineTo(pt2.x * w, pt2.y * h); canvasCtx.strokeStyle = color; canvasCtx.lineWidth = thickness; canvasCtx.stroke(); };
+                const drawCircle = (pt, radius, color) => { canvasCtx.beginPath(); canvasCtx.arc(pt.x * w, pt.y * h, radius, 0, 2 * Math.PI); canvasCtx.fillStyle = color; canvasCtx.fill(); };
+
+                const noseX = lm[0].x * w; drawLine({x: lm[0].x, y: 0}, {x: lm[0].x, y: 1}, 'rgb(135, 206, 235)', 2); drawCircle(lm[0], 8, 'rgb(135, 206, 235)');
+                const upperMidX = (lm[11].x + lm[12].x) / 2; const lowerMidX = (lm[23].x + lm[24].x) / 2; drawLine({x: upperMidX, y: 0}, {x: lowerMidX, y: 1}, 'rgb(0, 100, 255)', 3);
+                [[11, 23], [12, 24], [23, 24], [11, 12]].forEach(([p1, p2]) => { drawLine(lm[p1], lm[p2], 'rgb(100, 100, 100)', 2); drawCircle(lm[p1], 6, 'rgb(150, 150, 150)'); drawCircle(lm[p2], 6, 'rgb(150, 150, 150)'); });
+
+                const checkAndDrawArm = (pts) => {
+                    const straight = isStraight(lm[pts[0]], lm[pts[1]], lm[pts[2]]) && isStraight(lm[pts[1]], lm[pts[2]], lm[pts[3]]);
+                    const color = straight ? 'rgb(0, 255, 0)' : 'rgb(255, 0, 0)';
+                    for (let i = 0; i < pts.length - 1; i++) { drawLine(lm[pts[i]], lm[pts[i+1]], color, 6); drawCircle(lm[pts[i]], 8, color); drawCircle(lm[pts[i+1]], 8, color); }
+                };
+                checkAndDrawArm([11, 13, 15, 17]); checkAndDrawArm([12, 14, 16, 18]);
+            }
+
+            if (isCounting) {
+                const elapsed = (Date.now() - countdownStartTime) / 1000; const remaining = Math.ceil(countdownVal - elapsed);
+                if (remaining > 0) {
+                    canvasCtx.font = "bold 15vw Arial"; canvasCtx.fillStyle = "red"; canvasCtx.strokeStyle = "white"; canvasCtx.lineWidth = 3;
+                    canvasCtx.fillText(remaining, w * 0.05, h * 0.15); canvasCtx.strokeText(remaining, w * 0.05, h * 0.15);
+                } else { isCounting = false; capturePhoto(); }
+            }
+            
+            if (isRecording) { canvasCtx.beginPath(); canvasCtx.arc(w - (w * 0.05), h * 0.05, 20, 0, 2 * Math.PI); canvasCtx.fillStyle = "red"; canvasCtx.fill(); }
+            canvasCtx.restore();
+        });
+
+        async function startCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+            }
+            
+            // 👉 修改：極限要求，請求理想值 120 FPS
+            const constraints = {
+                video: {
+                    facingMode: cameraMode,
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 },
+                    frameRate: { ideal: 120, min: 60 } 
+                }
+            };
+
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+                videoElement.srcObject = cameraStream;
+                await videoElement.play();
+                
+                pose.setOptions({ selfieMode: cameraMode === 'user' });
+                
+                if (!isProcessingAI) {
+                    isProcessingAI = true;
+                    processVideoFrame();
+                }
+            } catch (error) {
+                console.error("相機啟動失敗:", error);
+                alert("無法存取高畫質相機，這可能是因為硬體不支援或是權限問題。");
+            }
+        }
+        
+        async function processVideoFrame() {
+            if (!isProcessingAI) return;
+            if (videoElement.readyState >= 2 && !videoElement.paused) {
+                await pose.send({image: videoElement});
+            }
+            requestAnimationFrame(processVideoFrame);
+        }
+
+        startCamera(); 
+
+        document.getElementById('switchCamBtn').addEventListener('click', () => { cameraMode = (cameraMode === 'user') ? 'environment' : 'user'; startCamera(); });
+        document.getElementById('countdownBtn').addEventListener('click', () => {
+            const val = parseInt(document.getElementById('timerInput').value);
+            if (isNaN(val) || val <= 0) { alert("請輸入有效的秒數"); return; }
+            countdownVal = val; isCounting = true; countdownStartTime = Date.now();
+        });
+        document.getElementById('shootBtn').addEventListener('click', capturePhoto);
+
+        document.getElementById('recordBtn').addEventListener('click', () => {
+            const recBtn = document.getElementById('recordBtn');
+            if (!isRecording) {
+                recordedChunks = []; 
+                // 👉 修改：將畫布錄影流設定為最高 120 FPS
+                const stream = canvasElement.captureStream(120); 
+                
+                // 設定超高位元率 (12 Mbps) 來支撐高幀率的細節
+                let options = { videoBitsPerSecond: 12000000 }; 
+                
+                if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1')) options.mimeType = 'video/mp4;codecs=avc1';
+                else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) options.mimeType = 'video/webm;codecs=vp9';
+                else if (MediaRecorder.isTypeSupported('video/webm')) options.mimeType = 'video/webm';
+
+                try { mediaRecorder = new MediaRecorder(stream, options); } 
+                catch (e) { mediaRecorder = new MediaRecorder(stream); }
+
+                mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+                mediaRecorder.onstop = saveVideoToGallery; 
+                mediaRecorder.start();
+                
+                isRecording = true; recBtn.innerText = '停止錄影'; recBtn.classList.add('recording');
+            } else {
+                mediaRecorder.stop(); isRecording = false; recBtn.innerText = '開始錄影'; recBtn.classList.remove('recording');
+            }
+        });
+
+        function dataURLtoFile(dataurl, filename) {
+            let arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1], bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+            while(n--) { u8arr[n] = bstr.charCodeAt(n); }
+            return new File([u8arr], filename, {type:mime});
+        }
+
+        function openModal(src, type) {
+            const modal = document.getElementById('mediaModal');
+            const content = document.getElementById('modalContent');
+            content.innerHTML = ''; 
+
+            if (type === 'image') {
+                const img = document.createElement('img'); img.src = src; content.appendChild(img);
+            } else {
+                const vid = document.createElement('video'); vid.src = src; vid.controls = true; vid.autoplay = true; content.appendChild(vid);
+            }
+            modal.style.display = 'flex';
+        }
+
+        document.getElementById('closeModal').onclick = () => {
+            document.getElementById('mediaModal').style.display = 'none';
+            document.getElementById('modalContent').innerHTML = ''; 
+        };
+
+        function capturePhoto() {
+            const dataURL = canvasElement.toDataURL('image/jpeg', 1.0);
+            document.getElementById('galleryContainer').style.display = 'block';
+
+            const now = new Date();
+            const filename = `archery_photo_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.jpg`;
+            const file = dataURLtoFile(dataURL, filename);
+            
+            capturedFilesArray.push(file);
+
+            const itemDiv = document.createElement('div'); itemDiv.className = 'gallery-item';
+            const img = document.createElement('img'); img.src = dataURL; img.onclick = () => openModal(dataURL, 'image');
+
+            const dlBtn = document.createElement('button'); dlBtn.innerText = '單獨存入相簿';
+            dlBtn.onclick = async () => {
+                if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file] }); } catch (e) {} } 
+                else { const link = document.createElement('a'); link.href = dataURL; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); }
+            };
+
+            itemDiv.appendChild(img); itemDiv.appendChild(dlBtn);
+            const gallery = document.getElementById('gallery'); gallery.insertBefore(itemDiv, gallery.firstChild);
+        }
+
+        function saveVideoToGallery() {
+            const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'video/mp4' });
+            const videoURL = URL.createObjectURL(blob);
+            document.getElementById('galleryContainer').style.display = 'block';
+
+            const now = new Date();
+            const ext = blob.type.includes('mp4') ? 'mp4' : 'webm';
+            const filename = `archery_video_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.${ext}`;
+            const file = new File([blob], filename, { type: blob.type });
+            
+            capturedFilesArray.push(file);
+
+            const itemDiv = document.createElement('div'); itemDiv.className = 'gallery-item';
+            const vid = document.createElement('video'); vid.src = videoURL; vid.onclick = () => openModal(videoURL, 'video');
+
+            const dlBtn = document.createElement('button'); dlBtn.className = 'vid-btn'; dlBtn.innerText = '單獨存入相簿';
+            dlBtn.onclick = async () => {
+                if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file] }); } catch (e) {} } 
+                else { const link = document.createElement('a'); link.href = videoURL; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); }
+            };
+
+            itemDiv.appendChild(vid); itemDiv.appendChild(dlBtn);
+            const gallery = document.getElementById('gallery'); gallery.insertBefore(itemDiv, gallery.firstChild);
+        }
+
+        document.getElementById('saveAllBtn').onclick = async () => {
+            if (capturedFilesArray.length === 0) { alert('目前還沒有任何紀錄喔！'); return; }
+            if (navigator.canShare && navigator.canShare({ files: capturedFilesArray })) {
+                try { await navigator.share({ files: capturedFilesArray, title: '射箭動作紀錄批次存檔' }); } catch (e) {}
+            } else {
+                capturedFilesArray.forEach(file => {
+                    const url = URL.createObjectURL(file); const link = document.createElement('a');
+                    link.href = url; link.download = file.name; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+                });
+            }
+        };
+    </script>
+</body>
+</html>
