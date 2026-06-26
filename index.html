@@ -127,7 +127,7 @@
         .gallery-container { margin: 0 auto; padding: 15px; background: white; border-radius: 8px; width: 90%; max-width: 600px; text-align: left; }
         .gallery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 10px;}
         .gallery-title { margin: 0; font-size: 16px; color: #333; font-weight: bold; line-height: 1.4; }
-        .gallery-title span { display: block; font-size: 12px; color: #2ECC71; }
+        .gallery-title span { display: block; font-size: 12px; color: #E74C3C; }
         
         #bulkActions { display: none; justify-content: space-between; margin-bottom: 15px; background: #f1f2f6; padding: 10px; border-radius: 8px; width: 100%; box-sizing: border-box; align-items: center; flex-wrap: wrap; gap: 8px; }
         #bulkActions button { padding: 8px 12px; border-radius: 5px; font-weight: bold; cursor: pointer; border: none; font-size: 14px; }
@@ -153,7 +153,6 @@
         .select-mode-on .gallery-item { cursor: pointer; }
         .select-mode-on .gallery-item:not(.selected) .select-overlay { display: block; }
         
-        /* 單獨存檔按鈕 (多選模式下隱藏) */
         .indiv-save-btn { width: 100%; padding: 8px 0; font-size: 13px; cursor: pointer; background-color: #3498DB; color: white; border: none; font-weight: bold; display: block; }
         .select-mode-on .indiv-save-btn { display: none; }
 
@@ -171,11 +170,10 @@
         .score-nav button.active { background: #3498DB; color: white; border-color: #2980B9; }
         
         .setup-group { margin-bottom: 15px; text-align: left; font-size: 16px; display: flex; align-items: center; }
-        .setup-group label { min-width: 130px; }
-        .setup-group input { width: 60px; font-size: 16px; text-align: center; margin-left: 5px; padding: 5px; border-radius: 5px; border: 1px solid #ccc; }
-        .setup-group select { font-size: 16px; padding: 5px; border-radius: 5px; margin-left: 5px; border: 1px solid #ccc; flex-grow: 1;}
+        .setup-group label { min-width: 140px; font-weight: bold; color: #333; }
+        .setup-group input { width: 60px; font-size: 16px; text-align: center; padding: 5px; border-radius: 5px; border: 1px solid #ccc; margin-left: 5px; }
         
-        .start-score-btn { background: #2ECC71; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .start-score-btn { background: #2ECC71; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px;}
         
         .score-grid { overflow-x: auto; margin-bottom: 15px; }
         .score-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 16px; }
@@ -261,7 +259,7 @@
     <div id="galleryModalUI">
         <div class="gallery-container" id="galleryContainer">
             <div class="gallery-header">
-                <p class="gallery-title">📸 媒體紀錄庫<br><span>(關閉網頁保留，永久儲存直到手動刪除)</span></p>
+                <p class="gallery-title">📸 媒體紀錄庫<br><span>(關閉網頁保留，手動刪除)</span></p>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <button id="toggleSelectModeBtn" style="background: #34495E; color: white; border: none; padding: 6px 12px; border-radius: 5px; font-weight: bold; cursor: pointer;">☑️ 多選模式</button>
                     <span id="closeGalleryModal" style="font-size: 32px; cursor: pointer; font-weight: bold; line-height: 1;">&times;</span>
@@ -277,7 +275,8 @@
             </div>
 
             <div id="gallery">
-                </div>
+                <!-- 動態生成內容 -->
+            </div>
         </div>
     </div>
 
@@ -311,10 +310,11 @@
                     <input type="number" id="inputArrows" value="6" min="1">
                 </div>
                 
+                <!-- 新增：距離選擇介面 -->
                 <div class="setup-group">
                     <label>射箭距離 (Distance)：</label>
                     <div style="display: flex; align-items: center; flex-grow: 1;">
-                        <select id="inputDistance">
+                        <select id="inputDistance" style="font-size: 16px; padding: 5px; border-radius: 5px; border: 1px solid #ccc; flex-grow: 1;">
                             <option value="70">70 公尺</option>
                             <option value="50">50 公尺</option>
                             <option value="30">30 公尺</option>
@@ -322,7 +322,7 @@
                             <option value="10">10 公尺</option>
                             <option value="custom">自訂...</option>
                         </select>
-                        <input type="number" id="inputCustomDistance" placeholder="m" style="display: none; width: 60px; margin-left: 5px;">
+                        <input type="number" id="inputCustomDistance" placeholder="m" style="display: none; width: 60px; margin-left: 5px; font-size: 16px; text-align: center; padding: 5px; border-radius: 5px; border: 1px solid #ccc;">
                     </div>
                 </div>
 
@@ -330,7 +330,8 @@
             </div>
 
             <div id="sectionScoring" style="display: none;">
-                <div class="total-text">總分: <span id="grandTotal">0</span></div>
+                <!-- 顯示總分與設定距離 -->
+                <div class="total-text">總分: <span id="grandTotal">0</span> <span style="font-size: 14px; color: #555; font-weight: normal;">(距離: <span id="displayScoreDist">70</span>m)</span></div>
                 <p style="font-size: 12px; color: #888; margin-top: -5px; margin-bottom: 10px;">💡 提示：點擊下方表格的格子可以直接跳過去修改成績。</p>
                 <div class="score-grid">
                     <table class="score-table" id="scoreTable"></table>
@@ -437,7 +438,7 @@
             mediaItems.unshift(item); 
             saveToDB(item);
             renderGallery();
-            showToast(`已存入紀錄庫 (${type==='image'?'照片':'影片'}已永久保留)`);
+            showToast(`已存入紀錄庫`);
         }
 
         document.addEventListener('DOMContentLoaded', loadMediaFromDB);
@@ -557,7 +558,7 @@
             }
         });
 
-        // ========== 原本的基礎邏輯 ==========
+        // ========== 選單與核心邏輯 ==========
         const openMenuBtn = document.getElementById('openMenuBtn');
         const closeMenuBtn = document.getElementById('closeMenuBtn');
         const sideMenu = document.getElementById('sideMenu');
@@ -592,7 +593,6 @@
             setTimeout(() => { toast.style.display = 'none'; }, 2500);
         }
 
-        // 相機核心邏輯
         const videoElement = document.getElementById('videoElement');
         const canvasElement = document.getElementById('outputCanvas');
         const canvasCtx = canvasElement.getContext('2d');
@@ -748,7 +748,7 @@
         let scoreData = [];
         let totalEnds = 6;
         let arrowsPerEnd = 6;
-        let currentDistance = '70'; // 新增全域變數：距離
+        let currentDistance = '70'; // 距離變數
         let currentEndIndex = 0;
         let currentArrowIndex = 0;
 
@@ -767,7 +767,7 @@
             if (activeTab === 'History') renderHistory();
         }
 
-        // 新增：處理距離下拉選單變化
+        // 距離選單變更事件
         document.getElementById('inputDistance').addEventListener('change', function(e) {
             const customInput = document.getElementById('inputCustomDistance');
             if (e.target.value === 'custom') {
@@ -782,9 +782,12 @@
             totalEnds = parseInt(document.getElementById('inputEnds').value) || 6;
             arrowsPerEnd = parseInt(document.getElementById('inputArrows').value) || 6;
             
-            // 讀取選擇的距離
+            // 讀取距離設定
             const distSelect = document.getElementById('inputDistance').value;
             currentDistance = distSelect === 'custom' ? (document.getElementById('inputCustomDistance').value || '0') : distSelect;
+            
+            // 顯示在計分板上
+            document.getElementById('displayScoreDist').innerText = currentDistance;
 
             scoreData = Array.from({ length: totalEnds }, () => Array(arrowsPerEnd).fill(null));
             currentEndIndex = 0; currentArrowIndex = 0;
@@ -853,14 +856,13 @@
             const now = new Date();
             const defaultName = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} 紀錄`;
             
-            // 將 currentDistance 存入紀錄中
             const record = { 
                 id: Date.now(), 
                 name: defaultName, 
                 totalScore: grandTotal, 
                 ends: totalEnds, 
                 arrows: arrowsPerEnd, 
-                distance: currentDistance, // 新增距離資料
+                distance: currentDistance,
                 data: JSON.parse(JSON.stringify(scoreData)) 
             };
             let history = JSON.parse(localStorage.getItem('archeryHistory')) || [];
@@ -885,7 +887,6 @@
                 });
                 
                 const summaryDiv = document.createElement('div'); summaryDiv.className = 'history-summary';
-                // 顯示距離資訊 (如果是舊紀錄沒有 distance 屬性，會顯示 '-' )
                 const distStr = rec.distance ? rec.distance : '-';
                 summaryDiv.innerHTML = `<span><b>總分: ${rec.totalScore}</b> (${rec.ends}趟x${rec.arrows}箭 / ${distStr}m)</span>`;
                 
@@ -913,8 +914,6 @@
 
             const card = document.getElementById('exportCard');
             document.getElementById('exName').innerText = record.name;
-            
-            // 輸出圖片也顯示距離
             const distStr = record.distance ? record.distance : '-';
             document.getElementById('exTotal').innerText = `總分: ${record.totalScore} (${distStr}m)`;
 
