@@ -2,8 +2,11 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -22,63 +25,67 @@
             padding-top: env(safe-area-inset-top); 
             display: flex; 
             flex-direction: column; 
+            -webkit-tap-highlight-color: transparent; 
         }
         
-        /* ========== 新增：漢堡選單按鈕 ========== */
+        /* 修改：漢堡選單取消絕對定位，適應在控制框內 */
         .hamburger-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.85);
+            background: #f9f9f9;
             padding: 8px 10px;
             border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
             display: flex;
             flex-direction: column;
             justify-content: space-around;
-            height: 35px;
-            width: 40px;
+            height: 38px;
+            width: 42px;
             box-sizing: border-box;
+            border: 1px solid #ccc;
+            flex-shrink: 0;
         }
         .hamburger-btn div { width: 100%; height: 3px; background-color: #333; border-radius: 2px; }
+        .hamburger-btn:active { background: #e0e0e0; }
         
-        /* ========== 新增：側邊選單與遮罩 ========== */
-        .menu-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998; }
+        /* 側邊選單與遮罩 */
+        .menu-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9998; backdrop-filter: blur(2px); }
         .side-menu {
-            position: fixed; top: 0; left: -250px; width: 250px; height: 100%; background: white; z-index: 9999;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.3); transition: left 0.3s ease; display: flex; flex-direction: column; padding-top: 60px;
+            position: fixed; top: 0; left: -280px; width: 260px; height: 100%; background: white; z-index: 9999;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.4); transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; 
+            padding-top: calc(60px + env(safe-area-inset-top));
         }
         .side-menu.open { left: 0; }
-        .close-menu-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #333; font-weight: bold; }
+        .close-menu-btn { position: absolute; top: calc(15px + env(safe-area-inset-top)); right: 20px; font-size: 32px; cursor: pointer; color: #333; font-weight: bold; line-height: 1; }
         .side-menu button {
-            background: none; border: none; padding: 15px 20px; text-align: left; font-size: 18px; font-weight: bold;
+            background: none; border: none; padding: 18px 20px; text-align: left; font-size: 18px; font-weight: bold;
             color: #333; cursor: pointer; border-bottom: 1px solid #eee; transition: background 0.2s;
         }
-        .side-menu button:hover { background: #f5f5f5; }
-        .menu-title { padding: 0 20px 10px 20px; font-size: 14px; color: #888; border-bottom: 2px solid #3498DB; margin-bottom: 10px; text-align: left; }
+        .side-menu button:active { background: #e0e0e0; }
+        .menu-title { padding: 0 20px 10px 20px; font-size: 14px; color: #888; border-bottom: 2px solid #3498DB; margin-bottom: 10px; text-align: left; font-weight: bold; }
 
-        /* ========== 新增：浮動提示框 (Toast) ========== */
+        /* 浮動提示框 (Toast) */
         .toast-msg {
-            display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            display: none; position: fixed; top: calc(20px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
             background: rgba(46, 204, 113, 0.95); color: white; padding: 10px 20px; border-radius: 20px;
             font-weight: bold; z-index: 10000; box-shadow: 0 4px 6px rgba(0,0,0,0.2); font-size: 14px;
         }
 
+        /* 修改：讓控制列恢復置中，內部使用 flex 排列 */
         .controls { 
             background: white; 
             padding: 10px; 
             border-radius: 8px; 
-            margin: 10px auto; 
+            margin: 10px auto; /* 恢復置中 */
             box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
-            width: 85%; /* 稍微縮小避開漢堡選單 */
+            width: 92%; 
             max-width: 450px; 
             flex-shrink: 0; 
-            margin-left: 70px; /* 留空間給漢堡按鈕 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
         }
         
-        .controls button { padding: 8px 10px; margin: 2px; cursor: pointer; font-size: 14px; border-radius: 5px; border: 1px solid #ccc; font-weight: bold; }
+        .controls button { padding: 8px 10px; margin: 0; cursor: pointer; font-size: 14px; border-radius: 5px; border: 1px solid #ccc; font-weight: bold; }
         
         #recordBtn { background-color: #2ECC71; color: white; border: none; }
         #recordBtn.recording { background-color: #E74C3C; animation: pulse 1.5s infinite; }
@@ -89,14 +96,14 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        .switch-container { display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; width: 100%; flex-wrap: wrap; }
-        .switch { position: relative; display: inline-block; width: 46px; height: 26px; }
+        .switch-container { display: flex; align-items: center; justify-content: flex-end; gap: 6px; width: 100%; flex-wrap: wrap; }
+        .switch { position: relative; display: inline-block; width: 42px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         input:checked + .slider { background-color: #2ECC71; }
-        input:checked + .slider:before { transform: translateX(20px); }
-        #timerInput { width: 40px; text-align: center; font-size: 16px; padding: 4px; border-radius: 5px; border: 1px solid #ccc; }
+        input:checked + .slider:before { transform: translateX(18px); }
+        #timerInput { width: 36px; text-align: center; font-size: 15px; padding: 4px; border-radius: 5px; border: 1px solid #ccc; }
 
         .canvas-container { 
             position: relative; 
@@ -109,37 +116,32 @@
             overflow: hidden; 
         }
         video { display: none; } 
+        canvas { width: 100%; height: 100%; object-fit: cover; display: block; }
         
-        canvas { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-            display: block;
-        }
-        
-        /* ========== 修改：紀錄庫改為彈出視窗 ========== */
-        #galleryModalUI { display: none; position: fixed; z-index: 10001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); flex-direction: column; justify-content: flex-start; align-items: center; overflow-y: auto; padding-top: env(safe-area-inset-top); }
-        .gallery-container { margin: 20px auto; padding: 15px; background: white; border-radius: 8px; width: 95%; max-width: 600px; text-align: left; }
+        /* 紀錄庫滿版視窗 */
+        #galleryModalUI { display: none; position: fixed; z-index: 10001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); flex-direction: column; justify-content: flex-start; align-items: center; overflow-y: auto; padding-top: calc(20px + env(safe-area-inset-top)); padding-bottom: 20px; }
+        .gallery-container { margin: 0 auto; padding: 15px; background: white; border-radius: 8px; width: 90%; max-width: 600px; text-align: left; }
         .gallery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px;}
         .gallery-title { margin: 0; font-size: 18px; color: #333; font-weight: bold; }
         .save-all-btn { background-color: #F1C40F; color: #333; border: none; padding: 5px 12px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         
-        #gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; justify-items: center;}
+        #gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; justify-items: center;}
         .gallery-item { text-align: center; width: 100%; }
-        .gallery-item img, .gallery-item video { width: 100%; height: 120px; border-radius: 5px; border: 1px solid #ddd; display: block; margin-bottom: 5px; background: black; cursor: pointer; object-fit: cover; }
-        .gallery-item button { width: 100%; padding: 6px 0; font-size: 12px; cursor: pointer; background-color: #3498DB; color: white; border: none; border-radius: 3px; font-weight: bold;}
+        .gallery-item img, .gallery-item video { width: 100%; height: 110px; border-radius: 5px; border: 1px solid #ddd; display: block; margin-bottom: 5px; background: black; cursor: pointer; object-fit: cover; }
+        .gallery-item button { width: 100%; padding: 8px 0; font-size: 12px; cursor: pointer; background-color: #3498DB; color: white; border: none; border-radius: 3px; font-weight: bold;}
         .gallery-item .vid-btn { background-color: #9B59B6; }
 
         .modal { display: none; position: fixed; z-index: 10005; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.95); flex-direction: column; justify-content: center; align-items: center; }
         .modal-content-wrapper { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; }
         .modal img, .modal video { max-width: 95vw; max-height: 85vh; border-radius: 8px; object-fit: contain; }
-        .close-modal { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 10006; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .close-modal { position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 30px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 10006; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
         /* 計分系統專用樣式 */
-        #scoreModalUI { display: none; position: fixed; z-index: 10001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); flex-direction: column; justify-content: flex-start; align-items: center; overflow-y: auto; padding-top: env(safe-area-inset-top); }
-        .score-container { background: white; width: 95%; max-width: 500px; border-radius: 8px; margin-top: 20px; margin-bottom: 20px; padding: 15px; box-sizing: border-box; text-align: center; }
+        #scoreModalUI { display: none; position: fixed; z-index: 10001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); flex-direction: column; justify-content: flex-start; align-items: center; overflow-y: auto; padding-top: calc(20px + env(safe-area-inset-top)); padding-bottom: 20px;}
+        .score-container { background: white; width: 90%; max-width: 500px; border-radius: 8px; margin: 0 auto; padding: 15px; box-sizing: border-box; text-align: center; }
         .score-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
-        .score-nav button { padding: 8px 12px; margin: 2px; cursor: pointer; background: #eee; border: 1px solid #ccc; border-radius: 5px; font-weight: bold; }
+        .score-nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 5px; }
+        .score-nav button { padding: 8px 12px; cursor: pointer; background: #eee; border: 1px solid #ccc; border-radius: 5px; font-weight: bold; flex-grow: 1;}
         .score-nav button.active { background: #3498DB; color: white; border-color: #2980B9; }
         
         .setup-group { margin-bottom: 15px; text-align: left; font-size: 16px; }
@@ -165,30 +167,26 @@
         .btn-undo { background-color: #7F8C8D; grid-column: span 3; color: white; text-shadow: none; }
         
         .action-btns { display: flex; gap: 10px; justify-content: center; }
-        .save-score-btn { background: #F39C12; color: white; padding: 10px 20px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; flex-grow: 1; }
-        .reset-score-btn { background: #E74C3C; color: white; padding: 10px 20px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; flex-grow: 1; }
+        .save-score-btn { background: #F39C12; color: white; padding: 10px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; flex-grow: 1; }
+        .reset-score-btn { background: #E74C3C; color: white; padding: 10px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; flex-grow: 1; }
         
-        .history-list { text-align: left; max-height: 50vh; overflow-y: auto; }
+        .history-list { text-align: left; max-height: 50vh; overflow-y: auto; padding-right: 5px;}
         .history-item { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 5px; background: #fafafa; }
-        .history-item input { width: 100%; border: none; font-weight: bold; font-size: 16px; border-bottom: 1px dashed #ccc; padding: 2px 0; margin-bottom: 5px; background: transparent; color: #2C3E50; }
+        .history-item input { width: 100%; border: none; font-weight: bold; font-size: 16px; border-bottom: 1px dashed #ccc; padding: 2px 0; margin-bottom: 5px; background: transparent; color: #2C3E50; box-sizing: border-box; }
         .history-item input:focus { outline: none; border-bottom-color: #3498DB; }
-        .history-summary { font-size: 14px; color: #666; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .history-summary { font-size: 14px; color: #666; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .history-actions { display: flex; gap: 5px; justify-content: flex-end; }
-        .del-history-btn { background: #E74C3C; color: white; border: none; border-radius: 3px; padding: 5px 10px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        .export-history-btn { background: #3498DB; color: white; border: none; border-radius: 3px; padding: 5px 10px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        .no-data { color: #999; margin-top: 20px; }
+        .del-history-btn { background: #E74C3C; color: white; border: none; border-radius: 3px; padding: 6px 12px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .export-history-btn { background: #3498DB; color: white; border: none; border-radius: 3px; padding: 6px 12px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .no-data { color: #999; margin-top: 20px; text-align: center; }
     </style>
 </head>
 <body>
 
+    <!-- 提示框 -->
     <div id="toastMsg" class="toast-msg">已存入紀錄庫</div>
 
-    <div class="hamburger-btn" id="openMenuBtn">
-        <div></div>
-        <div></div>
-        <div></div>
-    </div>
-
+    <!-- 側邊選單與遮罩 -->
     <div class="menu-overlay" id="menuOverlay"></div>
     <div class="side-menu" id="sideMenu">
         <span class="close-menu-btn" id="closeMenuBtn">&times;</span>
@@ -197,22 +195,37 @@
         <button id="menuGalleryBtn">📸 媒體紀錄庫</button>
     </div>
 
+    <!-- 整合漢堡選單的控制面板 -->
     <div class="controls">
-        <div class="switch-container">
-            <button id="actionShootBtn" style="background-color: #3498DB; color: white; border: none;">📸 拍照</button>
-            <label class="switch">
-                <input type="checkbox" id="photoModeToggle">
-                <span class="slider round"></span>
-            </label>
-            <span id="modeLabel" style="font-size: 15px; font-weight: bold; color: #333;">立即</span>
-            <input type="number" id="timerInput" value="5" style="display: none;">
-            <span id="secLabel" style="display: none; font-size: 15px; font-weight: bold; color: #333;">秒</span>
+        <!-- 第一列：漢堡選單 ＋ 拍照功能區 -->
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+            
+            <!-- 漢堡按鈕移入這裡 -->
+            <div class="hamburger-btn" id="openMenuBtn">
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+
+            <div class="switch-container">
+                <button id="actionShootBtn" style="background-color: #3498DB; color: white; border: none; padding: 8px 12px;">📸 拍照</button>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <label class="switch">
+                        <input type="checkbox" id="photoModeToggle">
+                        <span class="slider round"></span>
+                    </label>
+                    <span id="modeLabel" style="font-size: 14px; font-weight: bold; color: #333;">立即</span>
+                    <input type="number" id="timerInput" value="5" style="display: none;">
+                    <span id="secLabel" style="display: none; font-size: 14px; font-weight: bold; color: #333;">秒</span>
+                </div>
+            </div>
         </div>
         
-        <div>
-            <button id="recordBtn">🎥 開始錄影</button>
-            <button id="switchCamBtn">🔄 翻轉鏡頭</button>
-            </div>
+        <!-- 第二列：錄影與翻轉鏡頭 -->
+        <div style="display: flex; gap: 8px; width: 100%; justify-content: center;">
+            <button id="recordBtn" style="flex-grow: 1;">🎥 開始錄影</button>
+            <button id="switchCamBtn" style="flex-grow: 1;">🔄 翻轉鏡頭</button>
+        </div>
     </div>
     
     <div class="canvas-container">
@@ -220,13 +233,14 @@
         <canvas id="outputCanvas"></canvas>
     </div>
 
+    <!-- 紀錄庫滿版視窗 -->
     <div id="galleryModalUI">
         <div class="gallery-container" id="galleryContainer">
             <div class="gallery-header">
                 <p class="gallery-title">📸 高畫質紀錄庫</p>
-                <div>
+                <div style="display: flex; align-items: center;">
                     <button class="save-all-btn" id="saveAllBtn">✨ 一鍵存檔</button>
-                    <span id="closeGalleryModal" style="font-size: 24px; cursor: pointer; margin-left: 10px;">&times;</span>
+                    <span id="closeGalleryModal" style="font-size: 28px; cursor: pointer; margin-left: 15px; font-weight: bold;">&times;</span>
                 </div>
             </div>
             <div id="gallery"></div>
@@ -238,11 +252,12 @@
         <div class="modal-content-wrapper" id="modalContent"></div>
     </div>
 
+    <!-- 計分系統介面 -->
     <div id="scoreModalUI">
         <div class="score-container">
             <div class="score-header">
                 <h3 style="margin:0;">🎯 射箭計分系統</h3>
-                <span id="closeScoreModal" style="font-size: 24px; cursor: pointer;">&times;</span>
+                <span id="closeScoreModal" style="font-size: 28px; cursor: pointer; font-weight: bold;">&times;</span>
             </div>
             
             <div class="score-nav">
@@ -272,19 +287,19 @@
                 </div>
                 
                 <div class="keypad">
-                    <button class="btn-x" onclick="inputScore('X')">X</button>
-                    <button class="btn-10" onclick="inputScore('10')">10</button>
-                    <button class="btn-9" onclick="inputScore('9')">9</button>
-                    <button class="btn-8" onclick="inputScore('8')">8</button>
-                    <button class="btn-7" onclick="inputScore('7')">7</button>
-                    <button class="btn-6" onclick="inputScore('6')">6</button>
-                    <button class="btn-5" onclick="inputScore('5')">5</button>
-                    <button class="btn-4" onclick="inputScore('4')">4</button>
-                    <button class="btn-3" onclick="inputScore('3')">3</button>
-                    <button class="btn-2" onclick="inputScore('2')">2</button>
-                    <button class="btn-1" onclick="inputScore('1')">1</button>
-                    <button class="btn-m" onclick="inputScore('M')">M</button>
-                    <button class="btn-undo" onclick="undoScore()">⬅️ 退回上一格</button>
+                    <button class="btn-x" id="btnScoreX">X</button>
+                    <button class="btn-10" id="btnScore10">10</button>
+                    <button class="btn-9" id="btnScore9">9</button>
+                    <button class="btn-8" id="btnScore8">8</button>
+                    <button class="btn-7" id="btnScore7">7</button>
+                    <button class="btn-6" id="btnScore6">6</button>
+                    <button class="btn-5" id="btnScore5">5</button>
+                    <button class="btn-4" id="btnScore4">4</button>
+                    <button class="btn-3" id="btnScore3">3</button>
+                    <button class="btn-2" id="btnScore2">2</button>
+                    <button class="btn-1" id="btnScore1">1</button>
+                    <button class="btn-m" id="btnScoreM">M</button>
+                    <button class="btn-undo" id="btnScoreUndo">⬅️ 退回上一格</button>
                 </div>
                 
                 <div class="action-btns">
@@ -299,6 +314,7 @@
         </div>
     </div>
 
+    <!-- 隱藏的成績單模板 -->
     <div id="exportCardWrapper" style="position: absolute; top: -9999px; left: -9999px; z-index: -1;">
         <div id="exportCard" style="background: white; padding: 20px; border-radius: 10px; min-width: 400px; color: black; font-family: Arial; text-align: center;">
             <h2 id="exName" style="margin-top:0; border-bottom: 2px solid #ccc; padding-bottom: 10px;"></h2>
@@ -309,7 +325,9 @@
     </div>
 
     <script>
-        // ========== 漢堡選單邏輯 ==========
+        // ========== 使用 addEventListener 確保手機 iOS 的觸控支援 ==========
+        
+        // 漢堡選單邏輯
         const openMenuBtn = document.getElementById('openMenuBtn');
         const closeMenuBtn = document.getElementById('closeMenuBtn');
         const sideMenu = document.getElementById('sideMenu');
@@ -327,28 +345,25 @@
             }
         }
 
-        openMenuBtn.onclick = () => toggleMenu(true);
-        closeMenuBtn.onclick = () => toggleMenu(false);
-        menuOverlay.onclick = () => toggleMenu(false);
+        openMenuBtn.addEventListener('click', () => toggleMenu(true));
+        closeMenuBtn.addEventListener('click', () => toggleMenu(false));
+        menuOverlay.addEventListener('click', () => toggleMenu(false));
 
-        // 打開計分系統 (從側邊選單)
-        menuScoreBtn.onclick = () => {
+        menuScoreBtn.addEventListener('click', () => {
             toggleMenu(false);
             document.getElementById('scoreModalUI').style.display = 'flex';
-        };
+        });
 
-        // 打開紀錄庫 (從側邊選單)
-        menuGalleryBtn.onclick = () => {
+        menuGalleryBtn.addEventListener('click', () => {
             toggleMenu(false);
             document.getElementById('galleryModalUI').style.display = 'flex';
-        };
+        });
 
-        // 關閉紀錄庫
-        document.getElementById('closeGalleryModal').onclick = () => {
+        document.getElementById('closeGalleryModal').addEventListener('click', () => {
             document.getElementById('galleryModalUI').style.display = 'none';
-        };
+        });
 
-        // ========== Toast 提示邏輯 ==========
+        // Toast 提示邏輯
         function showToast(msg) {
             const toast = document.getElementById('toastMsg');
             toast.innerText = msg;
@@ -513,7 +528,7 @@
             modal.style.display = 'flex';
         }
 
-        document.getElementById('closeModal').onclick = () => { document.getElementById('mediaModal').style.display = 'none'; document.getElementById('modalContent').innerHTML = ''; };
+        document.getElementById('closeModal').addEventListener('click', () => { document.getElementById('mediaModal').style.display = 'none'; document.getElementById('modalContent').innerHTML = ''; });
 
         function capturePhoto() {
             const dataURL = canvasElement.toDataURL('image/jpeg', 1.0);
@@ -557,7 +572,7 @@
             showToast('🎥 影片已存入紀錄庫');
         }
 
-        document.getElementById('saveAllBtn').onclick = async () => {
+        document.getElementById('saveAllBtn').addEventListener('click', async () => {
             if (capturedFilesArray.length === 0) { alert('目前還沒有任何紀錄喔！'); return; }
             if (navigator.canShare && navigator.canShare({ files: capturedFilesArray })) {
                 try { await navigator.share({ files: capturedFilesArray, title: '射箭動作紀錄批次存檔' }); } catch (e) {}
@@ -567,7 +582,7 @@
                     link.href = url; link.download = file.name; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
                 });
             }
-        };
+        });
 
         // ========== 計分系統邏輯 ==========
         let scoreData = [];
@@ -576,11 +591,13 @@
         let currentEndIndex = 0;
         let currentArrowIndex = 0;
 
-        document.getElementById('closeScoreModal').onclick = () => document.getElementById('scoreModalUI').style.display = 'none';
+        document.getElementById('closeScoreModal').addEventListener('click', () => {
+            document.getElementById('scoreModalUI').style.display = 'none';
+        });
 
         const tabs = ['Setup', 'Scoring', 'History'];
         tabs.forEach(tab => {
-            document.getElementById(`tab${tab}`).onclick = () => switchTab(tab);
+            document.getElementById(`tab${tab}`).addEventListener('click', () => switchTab(tab));
         });
 
         function switchTab(activeTab) {
@@ -593,7 +610,7 @@
             if (activeTab === 'History') renderHistory();
         }
 
-        document.getElementById('startScoreBtn').onclick = () => {
+        document.getElementById('startScoreBtn').addEventListener('click', () => {
             totalEnds = parseInt(document.getElementById('inputEnds').value) || 6;
             arrowsPerEnd = parseInt(document.getElementById('inputArrows').value) || 6;
             scoreData = Array.from({ length: totalEnds }, () => Array(arrowsPerEnd).fill(null));
@@ -601,11 +618,11 @@
             currentArrowIndex = 0;
             renderScoreTable();
             switchTab('Scoring');
-        };
+        });
 
-        document.getElementById('resetScoreBtn').onclick = () => {
+        document.getElementById('resetScoreBtn').addEventListener('click', () => {
             if(confirm('確定要清除目前的計分重新開始嗎？')) document.getElementById('startScoreBtn').click();
-        };
+        });
 
         function parseScore(val) {
             if (val === 'X') return 10;
@@ -641,23 +658,29 @@
             document.getElementById('grandTotal').innerText = grandTotal;
         }
 
-        window.inputScore = function(val) {
+        // 綁定鍵盤按鈕事件
+        ['X', '10', '9', '8', '7', '6', '5', '4', '3', '2', '1', 'M'].forEach(val => {
+            document.getElementById(`btnScore${val}`).addEventListener('click', () => inputScore(val));
+        });
+        document.getElementById('btnScoreUndo').addEventListener('click', undoScore);
+
+        function inputScore(val) {
             if (currentEndIndex >= totalEnds) { alert('已經射完所有趟數囉！可以儲存成績了。'); return; }
             scoreData[currentEndIndex][currentArrowIndex] = val;
             currentArrowIndex++;
             if (currentArrowIndex >= arrowsPerEnd) { currentArrowIndex = 0; currentEndIndex++; }
             renderScoreTable();
-        };
+        }
 
-        window.undoScore = function() {
+        function undoScore() {
             if (currentEndIndex === 0 && currentArrowIndex === 0) return; 
             if (currentArrowIndex === 0) { currentEndIndex--; currentArrowIndex = arrowsPerEnd - 1; } 
             else { currentArrowIndex--; }
             scoreData[currentEndIndex][currentArrowIndex] = null;
             renderScoreTable();
-        };
+        }
 
-        document.getElementById('saveScoreRecBtn').onclick = () => {
+        document.getElementById('saveScoreRecBtn').addEventListener('click', () => {
             const grandTotal = document.getElementById('grandTotal').innerText;
             const now = new Date();
             const defaultName = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} 紀錄`;
@@ -677,7 +700,7 @@
             
             showToast('✅ 成績已儲存！');
             switchTab('History');
-        };
+        });
 
         function renderHistory() {
             const list = document.getElementById('historyList');
@@ -692,11 +715,11 @@
                 
                 const nameInput = document.createElement('input');
                 nameInput.value = rec.name;
-                nameInput.onchange = (e) => updateHistoryName(rec.id, e.target.value);
+                nameInput.addEventListener('change', (e) => updateHistoryName(rec.id, e.target.value));
                 
                 const summaryDiv = document.createElement('div');
                 summaryDiv.className = 'history-summary';
-                summaryDiv.innerHTML = `<span><b>總分: ${rec.totalScore}</b> (${rec.ends}趟 x ${rec.arrows}箭)</span>`;
+                summaryDiv.innerHTML = `<span><b>總分: ${rec.totalScore}</b> (${rec.ends}趟x${rec.arrows}箭)</span>`;
                 
                 const actionsDiv = document.createElement('div');
                 actionsDiv.className = 'history-actions';
@@ -704,18 +727,18 @@
                 const delBtn = document.createElement('button');
                 delBtn.className = 'del-history-btn';
                 delBtn.innerText = '刪除';
-                delBtn.onclick = () => {
+                delBtn.addEventListener('click', () => {
                     if(confirm('確定要刪除這筆紀錄嗎？')) {
                         history = history.filter(h => h.id !== rec.id);
                         localStorage.setItem('archeryHistory', JSON.stringify(history));
                         renderHistory();
                     }
-                };
+                });
 
                 const exportBtn = document.createElement('button');
                 exportBtn.className = 'export-history-btn';
                 exportBtn.innerText = '🖼️ 轉成相片';
-                exportBtn.onclick = () => exportScoreToImage(rec.id);
+                exportBtn.addEventListener('click', () => exportScoreToImage(rec.id));
 
                 actionsDiv.appendChild(exportBtn);
                 actionsDiv.appendChild(delBtn);
