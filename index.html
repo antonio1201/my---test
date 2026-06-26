@@ -13,11 +13,28 @@
     <title>射箭動作線性觀察與控制系統</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     <style>
-        /* 調整 body 間距，讓畫布能更貼齊螢幕邊緣 */
-        body { font-family: Arial, sans-serif; text-align: center; background-color: #f0f0f0; margin: 0; padding: 0; padding-top: env(safe-area-inset-top); }
+        /* 修改：讓網頁高度 100%，並使用 flex 垂直排列 */
+        html, body { height: 100%; margin: 0; padding: 0; }
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            background-color: #f0f0f0; 
+            padding-top: env(safe-area-inset-top); 
+            display: flex; 
+            flex-direction: column; 
+        }
         
-        /* 操作面板維持置中，稍微加上 margin 避免貼齊頂部 */
-        .controls { background: white; padding: 10px; border-radius: 8px; display: inline-block; margin: 10px auto; box-shadow: 0 2px 5px rgba(0,0,0,0.2); width: 95%; max-width: 450px; }
+        /* 確保控制面板維持原樣，且不會被擠壓 */
+        .controls { 
+            background: white; 
+            padding: 10px; 
+            border-radius: 8px; 
+            margin: 10px auto; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+            width: 95%; 
+            max-width: 450px; 
+            flex-shrink: 0; 
+        }
         .controls input { width: 40px; text-align: center; font-size: 16px; margin-right: 5px; }
         .controls button { padding: 8px 10px; margin: 2px; cursor: pointer; font-size: 14px; border-radius: 5px; border: 1px solid #ccc; font-weight: bold; }
         
@@ -30,20 +47,29 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        .canvas-container { position: relative; display: flex; justify-content: center; width: 100vw; background-color: #000; }
+        /* 修改：讓畫布容器自動填滿下方所有剩餘空間 */
+        .canvas-container { 
+            position: relative; 
+            flex-grow: 1; 
+            width: 100vw; 
+            background-color: #000; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; 
+        }
         video { display: none; } 
         
-        /* 重大修改：移除邊框與圓角，寬度設為 100vw，最大高度提升至 82vh，讓相機畫面放到最大 */
+        /* 修改：設定為 cover，讓相機畫面無視比例直接填滿整個容器，不留黑邊 */
         canvas { 
-            background-color: #000; 
-            width: 100vw; 
-            height: auto; 
-            max-height: 82vh; 
-            object-fit: contain; 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
             display: block;
         }
         
-        .gallery-container { margin-top: 15px; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); width: 95%; max-width: 600px; display: inline-block; text-align: left; overflow-x: auto; white-space: nowrap; margin-bottom: 20px; }
+        /* 確保截圖/錄影庫出現時也不會變形 */
+        .gallery-container { margin: 15px auto; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); width: 95%; max-width: 600px; text-align: left; overflow-x: auto; white-space: nowrap; flex-shrink: 0; margin-bottom: 20px;}
         .gallery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .gallery-title { margin: 0; font-size: 16px; color: #333; font-weight: bold; }
         .save-all-btn { background-color: #F1C40F; color: #333; border: none; padding: 5px 12px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
