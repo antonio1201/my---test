@@ -14,6 +14,7 @@
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3069/3069186.png">
 
     <title>射箭動作線性觀察與控制系統</title>
+    <!-- 引入外部套件：MediaPipe (骨架), html2canvas (截圖), Chart.js (統計圖表) -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -285,7 +286,8 @@
             </div>
 
             <div id="gallery">
-                </div>
+                <!-- 動態生成內容 -->
+            </div>
         </div>
     </div>
 
@@ -294,6 +296,7 @@
         <div class="modal-content-wrapper" id="modalContent"></div>
     </div>
 
+    <!-- 獨立的統計圖表視窗 -->
     <div id="statsModalUI" class="modal" style="z-index: 10005;">
         <div class="score-container" style="max-height: 90vh; overflow-y: auto; width: 90%; max-width: 450px;">
             <div class="score-header" style="border-bottom: 2px solid #3498DB;">
@@ -333,6 +336,7 @@
                     <input type="number" id="inputArrows" value="6" min="1">
                 </div>
                 
+                <!-- 射箭距離設定區 -->
                 <div class="setup-group">
                     <label>射箭距離 (Distance)：</label>
                     <div style="display: flex; align-items: center; flex-grow: 1;">
@@ -352,7 +356,8 @@
             </div>
 
             <div id="sectionScoring" style="display: none;">
-                <div class="total-text" id="displayGrandTotal" style="line-height: 1.5;">總分: 0 <br><span style="font-size: 14px; color: #555; font-weight: normal;">(距離: <span id="displayScoreDist">70</span>m / 平均: <span id="displayScoreAvg">0.00</span>)</span></div>
+                <!-- 修正：補回被誤刪的 span id="grandTotal" 確保 JS 可以找到並跳轉 -->
+                <div class="total-text" style="line-height: 1.5;">總分: <span id="grandTotal">0</span> <br><span style="font-size: 14px; color: #555; font-weight: normal;">(距離: <span id="displayScoreDist">70</span>m / 平均: <span id="displayScoreAvg">0.00</span>)</span></div>
                 <p style="font-size: 12px; color: #888; margin-top: 0px; margin-bottom: 10px;">💡 提示：點擊下方表格的格子可以直接跳過去修改成績。</p>
                 <div class="score-grid">
                     <table class="score-table" id="scoreTable"></table>
@@ -767,7 +772,7 @@
             addMediaItem(new File([blob], filename, { type: blob.type }), 'video');
         }
 
-        // ========== 計分系統邏輯 (含平均分與統計圓餅圖) ==========
+        // ========== 計分系統邏輯 (含平均分與排序圓餅圖) ==========
         let scoreData = [];
         let totalEnds = 6;
         let arrowsPerEnd = 6;
@@ -793,7 +798,6 @@
             if (activeTab === 'History') renderHistory();
         }
 
-        // 距離選單變更事件
         document.getElementById('inputDistance').addEventListener('change', function(e) {
             const customInput = document.getElementById('inputCustomDistance');
             if (e.target.value === 'custom') {
@@ -808,16 +812,15 @@
             totalEnds = parseInt(document.getElementById('inputEnds').value) || 6;
             arrowsPerEnd = parseInt(document.getElementById('inputArrows').value) || 6;
             
-            // 讀取距離設定
             const distSelect = document.getElementById('inputDistance').value;
             currentDistance = distSelect === 'custom' ? (document.getElementById('inputCustomDistance').value || '0') : distSelect;
             
-            // 顯示在計分板上
             document.getElementById('displayScoreDist').innerText = currentDistance;
 
             scoreData = Array.from({ length: totalEnds }, () => Array(arrowsPerEnd).fill(null));
             currentEndIndex = 0; currentArrowIndex = 0;
-            renderScoreTable(); switchTab('Scoring');
+            renderScoreTable(); 
+            switchTab('Scoring');
         });
 
         document.getElementById('resetScoreBtn').addEventListener('click', () => {
@@ -840,7 +843,7 @@
             thead += '<th>小計</th></tr>'; table.innerHTML += thead;
 
             currentGrandTotal = 0;
-            let actualArrows = 0; // 計算已射出的總箭數
+            let actualArrows = 0; 
 
             for (let e = 0; e < totalEnds; e++) {
                 let rowHtml = `<tr><td><b>${e + 1}</b></td>`;
@@ -858,7 +861,6 @@
                 table.innerHTML += rowHtml;
             }
             
-            // 計算平均分數 (四捨五入至小數點後兩位)
             currentAvg = actualArrows > 0 ? (currentGrandTotal / actualArrows).toFixed(2) : "0.00";
             document.getElementById('grandTotal').innerText = currentGrandTotal;
             document.getElementById('displayScoreAvg').innerText = currentAvg;
@@ -893,7 +895,7 @@
                 id: Date.now(), 
                 name: defaultName, 
                 totalScore: currentGrandTotal,
-                avgScore: currentAvg, // 儲存平均分
+                avgScore: currentAvg, 
                 ends: totalEnds, 
                 arrows: arrowsPerEnd, 
                 distance: currentDistance,
@@ -946,7 +948,7 @@
             });
         }
 
-        // ========== 統計圓餅圖與數據邏輯 ==========
+        // ========== 統計圓餅圖 (強制高分到低分) ==========
         function getScoreColor(val) {
             const colors = {
                 'X': '#FFD700', '10': '#F1C40F', '9': '#F39C12',
@@ -977,16 +979,16 @@
             
             let avg = actualArrows > 0 ? (rec.totalScore / actualArrows).toFixed(2) : "0.00";
 
-            // 更新介面文字
             document.getElementById('statsTitle').innerText = rec.name;
             const distStr = rec.distance ? rec.distance : '-';
             document.getElementById('statsAvg').innerText = `總分: ${rec.totalScore} / 平均: ${avg}分 \n(距離: ${distStr}m / 共 ${actualArrows} 箭)`;
             
-            // 建立分數標籤區
+            // 強制按照高分到低分的順序顯示 (解決自動跳號問題)
+            const scoreOrder = ['X', '10', '9', '8', '7', '6', '5', '4', '3', '2', '1', 'M'];
+            
             let textStats = '';
-            Object.keys(counts).forEach(k => {
+            scoreOrder.forEach(k => {
                 if(counts[k] > 0) {
-                    // X與10分用亮眼顏色，其他一般
                     let bgColor = (k === 'X' || k === '10' || k === '9') ? '#FEF9E7' : '#f9f9f9';
                     let bColor = getScoreColor(k);
                     textStats += `<span class="stats-badge" style="background:${bgColor}; border-color:${bColor};">${k}: ${counts[k]}</span>`;
@@ -994,13 +996,13 @@
             });
             document.getElementById('statsDetails').innerHTML = textStats;
 
-            // 準備圓餅圖資料
-            const labels = Object.keys(counts).filter(k => counts[k] > 0);
+            // 圓餅圖資料也強制依照高分到低分排序
+            const labels = scoreOrder.filter(k => counts[k] > 0);
             const data = labels.map(k => counts[k]);
             const bgColors = labels.map(k => getScoreColor(k));
 
             const ctx = document.getElementById('statsChart').getContext('2d');
-            if (statsChartInstance) statsChartInstance.destroy(); // 清除舊圖表
+            if (statsChartInstance) statsChartInstance.destroy(); 
             
             statsChartInstance = new Chart(ctx, {
                 type: 'pie',
@@ -1025,7 +1027,6 @@
             document.getElementById('statsModalUI').style.display = 'flex';
         }
 
-        // ========== 匯出圖片邏輯 ==========
         function exportScoreToImage(id) {
             const history = JSON.parse(localStorage.getItem('archeryHistory')) || [];
             const record = history.find(h => h.id === id); if (!record) return;
@@ -1035,7 +1036,6 @@
             const distStr = record.distance ? record.distance : '-';
             document.getElementById('exTotal').innerText = `總分: ${record.totalScore} (${distStr}m)`;
             
-            // 輸出圖片增加平均分數
             const avgStr = record.avgScore ? record.avgScore : '-';
             document.getElementById('exAvg').innerText = `平均: ${avgStr} 分`;
 
