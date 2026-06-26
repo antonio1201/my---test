@@ -24,15 +24,58 @@
             flex-direction: column; 
         }
         
+        /* ========== 新增：漢堡選單按鈕 ========== */
+        .hamburger-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.85);
+            padding: 8px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            height: 35px;
+            width: 40px;
+            box-sizing: border-box;
+        }
+        .hamburger-btn div { width: 100%; height: 3px; background-color: #333; border-radius: 2px; }
+        
+        /* ========== 新增：側邊選單與遮罩 ========== */
+        .menu-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998; }
+        .side-menu {
+            position: fixed; top: 0; left: -250px; width: 250px; height: 100%; background: white; z-index: 9999;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.3); transition: left 0.3s ease; display: flex; flex-direction: column; padding-top: 60px;
+        }
+        .side-menu.open { left: 0; }
+        .close-menu-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; color: #333; font-weight: bold; }
+        .side-menu button {
+            background: none; border: none; padding: 15px 20px; text-align: left; font-size: 18px; font-weight: bold;
+            color: #333; cursor: pointer; border-bottom: 1px solid #eee; transition: background 0.2s;
+        }
+        .side-menu button:hover { background: #f5f5f5; }
+        .menu-title { padding: 0 20px 10px 20px; font-size: 14px; color: #888; border-bottom: 2px solid #3498DB; margin-bottom: 10px; text-align: left; }
+
+        /* ========== 新增：浮動提示框 (Toast) ========== */
+        .toast-msg {
+            display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(46, 204, 113, 0.95); color: white; padding: 10px 20px; border-radius: 20px;
+            font-weight: bold; z-index: 10000; box-shadow: 0 4px 6px rgba(0,0,0,0.2); font-size: 14px;
+        }
+
         .controls { 
             background: white; 
             padding: 10px; 
             border-radius: 8px; 
             margin: 10px auto; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
-            width: 95%; 
-            max-width: 550px; 
+            width: 85%; /* 稍微縮小避開漢堡選單 */
+            max-width: 450px; 
             flex-shrink: 0; 
+            margin-left: 70px; /* 留空間給漢堡按鈕 */
         }
         
         .controls button { padding: 8px 10px; margin: 2px; cursor: pointer; font-size: 14px; border-radius: 5px; border: 1px solid #ccc; font-weight: bold; }
@@ -46,7 +89,6 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* ========== 新增：iOS 風格滑動開關樣式 ========== */
         .switch-container { display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; width: 100%; flex-wrap: wrap; }
         .switch { position: relative; display: inline-block; width: 46px; height: 26px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -75,23 +117,25 @@
             display: block;
         }
         
-        .gallery-container { margin: 15px auto; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); width: 95%; max-width: 600px; text-align: left; overflow-x: auto; white-space: nowrap; flex-shrink: 0; margin-bottom: 20px;}
-        .gallery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .gallery-title { margin: 0; font-size: 16px; color: #333; font-weight: bold; }
+        /* ========== 修改：紀錄庫改為彈出視窗 ========== */
+        #galleryModalUI { display: none; position: fixed; z-index: 10001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); flex-direction: column; justify-content: flex-start; align-items: center; overflow-y: auto; padding-top: env(safe-area-inset-top); }
+        .gallery-container { margin: 20px auto; padding: 15px; background: white; border-radius: 8px; width: 95%; max-width: 600px; text-align: left; }
+        .gallery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px;}
+        .gallery-title { margin: 0; font-size: 18px; color: #333; font-weight: bold; }
         .save-all-btn { background-color: #F1C40F; color: #333; border: none; padding: 5px 12px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         
-        .gallery-item { display: inline-block; margin-right: 15px; text-align: center; vertical-align: top; }
-        .gallery-item img, .gallery-item video { height: 120px; border-radius: 5px; border: 1px solid #ddd; display: block; margin-bottom: 5px; background: black; cursor: pointer; object-fit: cover; }
-        .gallery-item button { padding: 5px 10px; font-size: 12px; cursor: pointer; background-color: #3498DB; color: white; border: none; border-radius: 3px; }
+        #gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; justify-items: center;}
+        .gallery-item { text-align: center; width: 100%; }
+        .gallery-item img, .gallery-item video { width: 100%; height: 120px; border-radius: 5px; border: 1px solid #ddd; display: block; margin-bottom: 5px; background: black; cursor: pointer; object-fit: cover; }
+        .gallery-item button { width: 100%; padding: 6px 0; font-size: 12px; cursor: pointer; background-color: #3498DB; color: white; border: none; border-radius: 3px; font-weight: bold;}
         .gallery-item .vid-btn { background-color: #9B59B6; }
 
-        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); flex-direction: column; justify-content: center; align-items: center; }
+        .modal { display: none; position: fixed; z-index: 10005; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.95); flex-direction: column; justify-content: center; align-items: center; }
         .modal-content-wrapper { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; }
         .modal img, .modal video { max-width: 95vw; max-height: 85vh; border-radius: 8px; object-fit: contain; }
-        .close-modal { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 10000; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .close-modal { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 10006; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
         /* 計分系統專用樣式 */
-        #scoreBtn { background-color: #8E44AD; color: white; border: none; }
         #scoreModalUI { display: none; position: fixed; z-index: 10001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); flex-direction: column; justify-content: flex-start; align-items: center; overflow-y: auto; padding-top: env(safe-area-inset-top); }
         .score-container { background: white; width: 95%; max-width: 500px; border-radius: 8px; margin-top: 20px; margin-bottom: 20px; padding: 15px; box-sizing: border-box; text-align: center; }
         .score-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
@@ -136,6 +180,23 @@
     </style>
 </head>
 <body>
+
+    <div id="toastMsg" class="toast-msg">已存入紀錄庫</div>
+
+    <div class="hamburger-btn" id="openMenuBtn">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+
+    <div class="menu-overlay" id="menuOverlay"></div>
+    <div class="side-menu" id="sideMenu">
+        <span class="close-menu-btn" id="closeMenuBtn">&times;</span>
+        <div class="menu-title">系統功能選單</div>
+        <button id="menuScoreBtn">🎯 計分系統</button>
+        <button id="menuGalleryBtn">📸 媒體紀錄庫</button>
+    </div>
+
     <div class="controls">
         <div class="switch-container">
             <button id="actionShootBtn" style="background-color: #3498DB; color: white; border: none;">📸 拍照</button>
@@ -149,10 +210,9 @@
         </div>
         
         <div>
-            <button id="recordBtn">開始錄影</button>
-            <button id="switchCamBtn">翻轉鏡頭</button>
-            <button id="scoreBtn">📋 計分</button>
-        </div>
+            <button id="recordBtn">🎥 開始錄影</button>
+            <button id="switchCamBtn">🔄 翻轉鏡頭</button>
+            </div>
     </div>
     
     <div class="canvas-container">
@@ -160,12 +220,17 @@
         <canvas id="outputCanvas"></canvas>
     </div>
 
-    <div class="gallery-container" id="galleryContainer" style="display: none;">
-        <div class="gallery-header">
-            <p class="gallery-title">📸 高畫質紀錄庫</p>
-            <button class="save-all-btn" id="saveAllBtn">✨ 一鍵存檔 (全部)</button>
+    <div id="galleryModalUI">
+        <div class="gallery-container" id="galleryContainer">
+            <div class="gallery-header">
+                <p class="gallery-title">📸 高畫質紀錄庫</p>
+                <div>
+                    <button class="save-all-btn" id="saveAllBtn">✨ 一鍵存檔</button>
+                    <span id="closeGalleryModal" style="font-size: 24px; cursor: pointer; margin-left: 10px;">&times;</span>
+                </div>
+            </div>
+            <div id="gallery"></div>
         </div>
-        <div id="gallery"></div>
     </div>
 
     <div id="mediaModal" class="modal">
@@ -244,6 +309,54 @@
     </div>
 
     <script>
+        // ========== 漢堡選單邏輯 ==========
+        const openMenuBtn = document.getElementById('openMenuBtn');
+        const closeMenuBtn = document.getElementById('closeMenuBtn');
+        const sideMenu = document.getElementById('sideMenu');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const menuScoreBtn = document.getElementById('menuScoreBtn');
+        const menuGalleryBtn = document.getElementById('menuGalleryBtn');
+
+        function toggleMenu(show) {
+            if (show) {
+                sideMenu.classList.add('open');
+                menuOverlay.style.display = 'block';
+            } else {
+                sideMenu.classList.remove('open');
+                menuOverlay.style.display = 'none';
+            }
+        }
+
+        openMenuBtn.onclick = () => toggleMenu(true);
+        closeMenuBtn.onclick = () => toggleMenu(false);
+        menuOverlay.onclick = () => toggleMenu(false);
+
+        // 打開計分系統 (從側邊選單)
+        menuScoreBtn.onclick = () => {
+            toggleMenu(false);
+            document.getElementById('scoreModalUI').style.display = 'flex';
+        };
+
+        // 打開紀錄庫 (從側邊選單)
+        menuGalleryBtn.onclick = () => {
+            toggleMenu(false);
+            document.getElementById('galleryModalUI').style.display = 'flex';
+        };
+
+        // 關閉紀錄庫
+        document.getElementById('closeGalleryModal').onclick = () => {
+            document.getElementById('galleryModalUI').style.display = 'none';
+        };
+
+        // ========== Toast 提示邏輯 ==========
+        function showToast(msg) {
+            const toast = document.getElementById('toastMsg');
+            toast.innerText = msg;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2500);
+        }
+
+        // ========== 原本相機核心邏輯 ==========
         const videoElement = document.getElementById('videoElement');
         const canvasElement = document.getElementById('outputCanvas');
         const canvasCtx = canvasElement.getContext('2d');
@@ -336,7 +449,6 @@
 
         document.getElementById('switchCamBtn').addEventListener('click', () => { cameraMode = (cameraMode === 'user') ? 'environment' : 'user'; startCamera(); });
 
-        // ========== 新增：iOS 開關邏輯 ==========
         const photoModeToggle = document.getElementById('photoModeToggle');
         const timerInput = document.getElementById('timerInput');
         const modeLabel = document.getElementById('modeLabel');
@@ -363,7 +475,6 @@
                 capturePhoto();
             }
         });
-        // =====================================
 
         document.getElementById('recordBtn').addEventListener('click', () => {
             const recBtn = document.getElementById('recordBtn');
@@ -381,9 +492,9 @@
                 mediaRecorder.onstop = saveVideoToGallery; 
                 mediaRecorder.start();
                 
-                isRecording = true; recBtn.innerText = '停止錄影'; recBtn.classList.add('recording');
+                isRecording = true; recBtn.innerText = '⏹️ 停止錄影'; recBtn.classList.add('recording');
             } else {
-                mediaRecorder.stop(); isRecording = false; recBtn.innerText = '開始錄影'; recBtn.classList.remove('recording');
+                mediaRecorder.stop(); isRecording = false; recBtn.innerText = '🎥 開始錄影'; recBtn.classList.remove('recording');
             }
         });
 
@@ -406,7 +517,6 @@
 
         function capturePhoto() {
             const dataURL = canvasElement.toDataURL('image/jpeg', 1.0);
-            document.getElementById('galleryContainer').style.display = 'block';
             const now = new Date();
             const filename = `archery_photo_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.jpg`;
             const file = dataURLtoFile(dataURL, filename);
@@ -414,19 +524,20 @@
 
             const itemDiv = document.createElement('div'); itemDiv.className = 'gallery-item';
             const img = document.createElement('img'); img.src = dataURL; img.onclick = () => openModal(dataURL, 'image');
-            const dlBtn = document.createElement('button'); dlBtn.innerText = '單獨存入相簿';
+            const dlBtn = document.createElement('button'); dlBtn.innerText = '單獨存檔';
             dlBtn.onclick = async () => {
                 if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file] }); } catch (e) {} } 
                 else { const link = document.createElement('a'); link.href = dataURL; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); }
             };
             itemDiv.appendChild(img); itemDiv.appendChild(dlBtn);
             const gallery = document.getElementById('gallery'); gallery.insertBefore(itemDiv, gallery.firstChild);
+            
+            showToast('📸 照片已存入紀錄庫');
         }
 
         function saveVideoToGallery() {
             const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'video/mp4' });
             const videoURL = URL.createObjectURL(blob);
-            document.getElementById('galleryContainer').style.display = 'block';
             const now = new Date();
             const ext = blob.type.includes('mp4') ? 'mp4' : 'webm';
             const filename = `archery_video_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.${ext}`;
@@ -435,13 +546,15 @@
 
             const itemDiv = document.createElement('div'); itemDiv.className = 'gallery-item';
             const vid = document.createElement('video'); vid.src = videoURL; vid.onclick = () => openModal(videoURL, 'video');
-            const dlBtn = document.createElement('button'); dlBtn.className = 'vid-btn'; dlBtn.innerText = '單獨存入相簿';
+            const dlBtn = document.createElement('button'); dlBtn.className = 'vid-btn'; dlBtn.innerText = '單獨存檔';
             dlBtn.onclick = async () => {
                 if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file] }); } catch (e) {} } 
                 else { const link = document.createElement('a'); link.href = videoURL; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); }
             };
             itemDiv.appendChild(vid); itemDiv.appendChild(dlBtn);
             const gallery = document.getElementById('gallery'); gallery.insertBefore(itemDiv, gallery.firstChild);
+            
+            showToast('🎥 影片已存入紀錄庫');
         }
 
         document.getElementById('saveAllBtn').onclick = async () => {
@@ -456,16 +569,14 @@
             }
         };
 
-        // 計分系統邏輯
+        // ========== 計分系統邏輯 ==========
         let scoreData = [];
         let totalEnds = 6;
         let arrowsPerEnd = 6;
         let currentEndIndex = 0;
         let currentArrowIndex = 0;
 
-        const scoreModalUI = document.getElementById('scoreModalUI');
-        document.getElementById('scoreBtn').onclick = () => scoreModalUI.style.display = 'flex';
-        document.getElementById('closeScoreModal').onclick = () => scoreModalUI.style.display = 'none';
+        document.getElementById('closeScoreModal').onclick = () => document.getElementById('scoreModalUI').style.display = 'none';
 
         const tabs = ['Setup', 'Scoring', 'History'];
         tabs.forEach(tab => {
@@ -564,7 +675,7 @@
             history.unshift(record); 
             localStorage.setItem('archeryHistory', JSON.stringify(history));
             
-            alert('成績已儲存！');
+            showToast('✅ 成績已儲存！');
             switchTab('History');
         };
 
@@ -590,7 +701,6 @@
                 const actionsDiv = document.createElement('div');
                 actionsDiv.className = 'history-actions';
 
-                // 刪除按鈕
                 const delBtn = document.createElement('button');
                 delBtn.className = 'del-history-btn';
                 delBtn.innerText = '刪除';
@@ -602,7 +712,6 @@
                     }
                 };
 
-                // ========== 新增：轉成相片按鈕 ==========
                 const exportBtn = document.createElement('button');
                 exportBtn.className = 'export-history-btn';
                 exportBtn.innerText = '🖼️ 轉成相片';
@@ -623,7 +732,6 @@
             if (index !== -1) { history[index].name = newName; localStorage.setItem('archeryHistory', JSON.stringify(history)); }
         }
 
-        // ========== 新增：生成成績圖片邏輯 ==========
         function exportScoreToImage(id) {
             const history = JSON.parse(localStorage.getItem('archeryHistory')) || [];
             const record = history.find(h => h.id === id);
@@ -650,12 +758,8 @@
             }
             document.getElementById('exTable').innerHTML = thead + tbody;
 
-            // 執行截圖
             html2canvas(card, { scale: 2 }).then(canvas => {
                 const dataURL = canvas.toDataURL('image/png');
-                
-                // 將圖片匯入現有的紀錄庫
-                document.getElementById('galleryContainer').style.display = 'block';
                 const now = new Date();
                 const filename = `score_card_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.png`;
                 const file = dataURLtoFile(dataURL, filename);
@@ -665,7 +769,7 @@
                 const itemDiv = document.createElement('div'); itemDiv.className = 'gallery-item';
                 const img = document.createElement('img'); img.src = dataURL; img.onclick = () => openModal(dataURL, 'image');
 
-                const dlBtn = document.createElement('button'); dlBtn.innerText = '單獨存入相簿';
+                const dlBtn = document.createElement('button'); dlBtn.innerText = '單獨存檔';
                 dlBtn.onclick = async () => {
                     if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file] }); } catch (e) {} } 
                     else { const link = document.createElement('a'); link.href = dataURL; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); }
@@ -675,8 +779,7 @@
                 const gallery = document.getElementById('gallery'); 
                 gallery.insertBefore(itemDiv, gallery.firstChild);
                 
-                alert('🎯 成功！成績已轉成相片並存入主畫面下方的「📸 高畫質紀錄庫」！');
-                document.getElementById('closeScoreModal').click(); // 自動關閉計分面板以便查看相片
+                showToast('🎯 成績卡已存入選單內的「媒體紀錄庫」！');
             });
         }
     </script>
