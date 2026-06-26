@@ -16,6 +16,8 @@
     <title>射箭動作線性觀察與控制系統</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         html, body { height: 100%; margin: 0; padding: 0; }
         body { 
@@ -127,7 +129,7 @@
         .gallery-container { margin: 0 auto; padding: 15px; background: white; border-radius: 8px; width: 90%; max-width: 600px; text-align: left; }
         .gallery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 10px;}
         .gallery-title { margin: 0; font-size: 16px; color: #333; font-weight: bold; line-height: 1.4; }
-        .gallery-title span { display: block; font-size: 12px; color: #E74C3C; }
+        .gallery-title span { display: block; font-size: 12px; color: #2ECC71; }
         
         #bulkActions { display: none; justify-content: space-between; margin-bottom: 15px; background: #f1f2f6; padding: 10px; border-radius: 8px; width: 100%; box-sizing: border-box; align-items: center; flex-wrap: wrap; gap: 8px; }
         #bulkActions button { padding: 8px 12px; border-radius: 5px; font-weight: bold; cursor: pointer; border: none; font-size: 14px; }
@@ -205,11 +207,19 @@
         .history-item { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 5px; background: #fafafa; }
         .history-item input { width: 100%; border: none; font-weight: bold; font-size: 16px; border-bottom: 1px dashed #ccc; padding: 2px 0; margin-bottom: 5px; background: transparent; color: #2C3E50; box-sizing: border-box; }
         .history-item input:focus { outline: none; border-bottom-color: #3498DB; }
-        .history-summary { font-size: 14px; color: #666; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .history-actions { display: flex; gap: 5px; justify-content: flex-end; }
-        .del-history-btn { background: #E74C3C; color: white; border: none; border-radius: 3px; padding: 6px 12px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        .export-history-btn { background: #3498DB; color: white; border: none; border-radius: 3px; padding: 6px 12px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .history-summary { font-size: 14px; color: #666; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 5px; }
+        .history-actions { display: flex; gap: 5px; justify-content: flex-end; width: 100%; }
+        
+        /* 歷史紀錄按鈕調整 */
+        .del-history-btn { background: #E74C3C; color: white; border: none; border-radius: 3px; padding: 6px 10px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .export-history-btn { background: #3498DB; color: white; border: none; border-radius: 3px; padding: 6px 10px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .stats-history-btn { background: #9B59B6; color: white; border: none; border-radius: 3px; padding: 6px 10px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        
         .no-data { color: #999; margin-top: 20px; text-align: center; }
+        
+        /* 統計圖表細節 */
+        .stats-details-badges { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-bottom: 15px; }
+        .stats-badge { padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: bold; background: #eee; color: #333; border: 1px solid #ddd; }
     </style>
 </head>
 <body>
@@ -259,7 +269,7 @@
     <div id="galleryModalUI">
         <div class="gallery-container" id="galleryContainer">
             <div class="gallery-header">
-                <p class="gallery-title">📸 媒體紀錄庫<br><span>(關閉網頁保留，手動刪除)</span></p>
+                <p class="gallery-title">📸 媒體紀錄庫<br><span>(關閉網頁保留，永久儲存直到手動刪除)</span></p>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <button id="toggleSelectModeBtn" style="background: #34495E; color: white; border: none; padding: 6px 12px; border-radius: 5px; font-weight: bold; cursor: pointer;">☑️ 多選模式</button>
                     <span id="closeGalleryModal" style="font-size: 32px; cursor: pointer; font-weight: bold; line-height: 1;">&times;</span>
@@ -275,14 +285,27 @@
             </div>
 
             <div id="gallery">
-                <!-- 動態生成內容 -->
-            </div>
+                </div>
         </div>
     </div>
 
     <div id="mediaModal" class="modal">
         <span class="close-modal" id="closeModal">&times;</span>
         <div class="modal-content-wrapper" id="modalContent"></div>
+    </div>
+
+    <div id="statsModalUI" class="modal" style="z-index: 10005;">
+        <div class="score-container" style="max-height: 90vh; overflow-y: auto; width: 90%; max-width: 450px;">
+            <div class="score-header" style="border-bottom: 2px solid #3498DB;">
+                <h3 id="statsTitle" style="margin:0; color: #2C3E50;">🎯 數據統計</h3>
+                <span id="closeStatsModal" style="font-size: 28px; cursor: pointer; font-weight: bold;">&times;</span>
+            </div>
+            <h4 id="statsAvg" style="color:#E74C3C; margin: 10px 0;"></h4>
+            <div id="statsDetails" class="stats-details-badges"></div>
+            <div style="position: relative; width: 100%; height: 250px;">
+                <canvas id="statsChart"></canvas>
+            </div>
+        </div>
     </div>
 
     <div id="scoreModalUI">
@@ -310,7 +333,6 @@
                     <input type="number" id="inputArrows" value="6" min="1">
                 </div>
                 
-                <!-- 新增：距離選擇介面 -->
                 <div class="setup-group">
                     <label>射箭距離 (Distance)：</label>
                     <div style="display: flex; align-items: center; flex-grow: 1;">
@@ -330,9 +352,8 @@
             </div>
 
             <div id="sectionScoring" style="display: none;">
-                <!-- 顯示總分與設定距離 -->
-                <div class="total-text">總分: <span id="grandTotal">0</span> <span style="font-size: 14px; color: #555; font-weight: normal;">(距離: <span id="displayScoreDist">70</span>m)</span></div>
-                <p style="font-size: 12px; color: #888; margin-top: -5px; margin-bottom: 10px;">💡 提示：點擊下方表格的格子可以直接跳過去修改成績。</p>
+                <div class="total-text" id="displayGrandTotal" style="line-height: 1.5;">總分: 0 <br><span style="font-size: 14px; color: #555; font-weight: normal;">(距離: <span id="displayScoreDist">70</span>m / 平均: <span id="displayScoreAvg">0.00</span>)</span></div>
+                <p style="font-size: 12px; color: #888; margin-top: 0px; margin-bottom: 10px;">💡 提示：點擊下方表格的格子可以直接跳過去修改成績。</p>
                 <div class="score-grid">
                     <table class="score-table" id="scoreTable"></table>
                 </div>
@@ -350,7 +371,7 @@
                     <button class="btn-2" id="btnScore2">2</button>
                     <button class="btn-1" id="btnScore1">1</button>
                     <button class="btn-m" id="btnScoreM">M</button>
-                    <button class="btn-undo" id="btnScoreUndo">⬅️ 退回上一格</button>
+                    <button class="btn-undo" id="btnScoreUndo">⬅️ 退回</button>
                 </div>
                 
                 <div class="action-btns">
@@ -368,7 +389,8 @@
     <div id="exportCardWrapper" style="position: absolute; top: -9999px; left: -9999px; z-index: -1;">
         <div id="exportCard" style="background: white; padding: 20px; border-radius: 10px; min-width: 400px; color: black; font-family: Arial; text-align: center;">
             <h2 id="exName" style="margin-top:0; border-bottom: 2px solid #ccc; padding-bottom: 10px;"></h2>
-            <h3 id="exTotal" style="color:#E74C3C; font-size: 24px;"></h3>
+            <h3 id="exTotal" style="color:#E74C3C; font-size: 24px; margin-bottom: 5px;"></h3>
+            <p id="exAvg" style="font-size: 16px; color: #555; margin-top: 0; font-weight: bold;"></p>
             <table class="score-table" id="exTable" style="width:100%; text-align:center; border-collapse:collapse; margin-top: 15px;"></table>
             <p style="margin-top: 15px; font-size: 12px; color: #888;">射箭動作線性觀察與控制系統 - 自動生成</p>
         </div>
@@ -380,6 +402,7 @@
         let db;
         let mediaItems = [];
         let isSelectMode = false;
+        let statsChartInstance = null; // 圖表實例
 
         function initDB() {
             return new Promise((resolve, reject) => {
@@ -558,7 +581,7 @@
             }
         });
 
-        // ========== 選單與核心邏輯 ==========
+        // ========== 選單與相機核心邏輯 ==========
         const openMenuBtn = document.getElementById('openMenuBtn');
         const closeMenuBtn = document.getElementById('closeMenuBtn');
         const sideMenu = document.getElementById('sideMenu');
@@ -744,15 +767,18 @@
             addMediaItem(new File([blob], filename, { type: blob.type }), 'video');
         }
 
-        // ========== 計分系統邏輯 ==========
+        // ========== 計分系統邏輯 (含平均分與統計圓餅圖) ==========
         let scoreData = [];
         let totalEnds = 6;
         let arrowsPerEnd = 6;
-        let currentDistance = '70'; // 距離變數
+        let currentDistance = '70'; 
         let currentEndIndex = 0;
         let currentArrowIndex = 0;
+        let currentGrandTotal = 0;
+        let currentAvg = "0.00";
 
         document.getElementById('closeScoreModal').addEventListener('click', () => { document.getElementById('scoreModalUI').style.display = 'none'; });
+        document.getElementById('closeStatsModal').addEventListener('click', () => { document.getElementById('statsModalUI').style.display = 'none'; });
 
         const tabs = ['Setup', 'Scoring', 'History'];
         tabs.forEach(tab => { document.getElementById(`tab${tab}`).addEventListener('click', () => switchTab(tab)); });
@@ -813,21 +839,29 @@
             for (let i = 1; i <= arrowsPerEnd; i++) thead += `<th>${i}</th>`;
             thead += '<th>小計</th></tr>'; table.innerHTML += thead;
 
-            let grandTotal = 0;
+            currentGrandTotal = 0;
+            let actualArrows = 0; // 計算已射出的總箭數
+
             for (let e = 0; e < totalEnds; e++) {
                 let rowHtml = `<tr><td><b>${e + 1}</b></td>`;
                 let endTotal = 0;
                 for (let a = 0; a < arrowsPerEnd; a++) {
                     const val = scoreData[e][a];
                     endTotal += parseScore(val);
+                    if (val !== null) actualArrows++;
+                    
                     let activeClass = (e === currentEndIndex && a === currentArrowIndex) ? 'active-cell' : '';
                     rowHtml += `<td class="score-cell ${activeClass}" onclick="setActiveCell(${e}, ${a})">${val !== null ? val : ''}</td>`;
                 }
-                grandTotal += endTotal;
+                currentGrandTotal += endTotal;
                 rowHtml += `<td><b>${endTotal}</b></td></tr>`;
                 table.innerHTML += rowHtml;
             }
-            document.getElementById('grandTotal').innerText = grandTotal;
+            
+            // 計算平均分數 (四捨五入至小數點後兩位)
+            currentAvg = actualArrows > 0 ? (currentGrandTotal / actualArrows).toFixed(2) : "0.00";
+            document.getElementById('grandTotal').innerText = currentGrandTotal;
+            document.getElementById('displayScoreAvg').innerText = currentAvg;
         }
 
         ['X', '10', '9', '8', '7', '6', '5', '4', '3', '2', '1', 'M'].forEach(val => {
@@ -852,14 +886,14 @@
         }
 
         document.getElementById('saveScoreRecBtn').addEventListener('click', () => {
-            const grandTotal = document.getElementById('grandTotal').innerText;
             const now = new Date();
             const defaultName = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} 紀錄`;
             
             const record = { 
                 id: Date.now(), 
                 name: defaultName, 
-                totalScore: grandTotal, 
+                totalScore: currentGrandTotal,
+                avgScore: currentAvg, // 儲存平均分
                 ends: totalEnds, 
                 arrows: arrowsPerEnd, 
                 distance: currentDistance,
@@ -888,7 +922,8 @@
                 
                 const summaryDiv = document.createElement('div'); summaryDiv.className = 'history-summary';
                 const distStr = rec.distance ? rec.distance : '-';
-                summaryDiv.innerHTML = `<span><b>總分: ${rec.totalScore}</b> (${rec.ends}趟x${rec.arrows}箭 / ${distStr}m)</span>`;
+                const avgStr = rec.avgScore ? rec.avgScore : '-';
+                summaryDiv.innerHTML = `<span style="flex-grow:1;"><b>總分: ${rec.totalScore}</b> <span style="font-size:12px; color:#E74C3C; font-weight:bold;">(均: ${avgStr})</span><br><span style="font-size:12px;">(${rec.ends}趟x${rec.arrows}箭 / ${distStr}m)</span></span>`;
                 
                 const actionsDiv = document.createElement('div'); actionsDiv.className = 'history-actions';
 
@@ -903,11 +938,94 @@
                 const exportBtn = document.createElement('button'); exportBtn.className = 'export-history-btn'; exportBtn.innerText = '🖼️ 轉成相片';
                 exportBtn.addEventListener('click', () => exportScoreToImage(rec.id));
 
-                actionsDiv.appendChild(exportBtn); actionsDiv.appendChild(delBtn);
+                const statsBtn = document.createElement('button'); statsBtn.className = 'stats-history-btn'; statsBtn.innerText = '📊 統計';
+                statsBtn.addEventListener('click', () => showStats(rec.id));
+
+                actionsDiv.appendChild(statsBtn); actionsDiv.appendChild(exportBtn); actionsDiv.appendChild(delBtn);
                 item.appendChild(nameInput); item.appendChild(summaryDiv); item.appendChild(actionsDiv); list.appendChild(item);
             });
         }
 
+        // ========== 統計圓餅圖與數據邏輯 ==========
+        function getScoreColor(val) {
+            const colors = {
+                'X': '#FFD700', '10': '#F1C40F', '9': '#F39C12',
+                '8': '#E74C3C', '7': '#C0392B',
+                '6': '#3498DB', '5': '#2980B9',
+                '4': '#34495E', '3': '#2C3E50',
+                '2': '#ECF0F1', '1': '#BDC3C7', 'M': '#95A5A6'
+            };
+            return colors[val] || '#ccc';
+        }
+
+        function showStats(id) {
+            const history = JSON.parse(localStorage.getItem('archeryHistory')) || [];
+            const rec = history.find(h => h.id === id);
+            if (!rec) return;
+
+            // 計算各分數頻率
+            const counts = { 'X':0, '10':0, '9':0, '8':0, '7':0, '6':0, '5':0, '4':0, '3':0, '2':0, '1':0, 'M':0 };
+            let actualArrows = 0;
+            rec.data.forEach(end => {
+                end.forEach(arr => {
+                    if (arr !== null && counts[arr] !== undefined) {
+                        counts[arr]++;
+                        actualArrows++;
+                    }
+                });
+            });
+            
+            let avg = actualArrows > 0 ? (rec.totalScore / actualArrows).toFixed(2) : "0.00";
+
+            // 更新介面文字
+            document.getElementById('statsTitle').innerText = rec.name;
+            const distStr = rec.distance ? rec.distance : '-';
+            document.getElementById('statsAvg').innerText = `總分: ${rec.totalScore} / 平均: ${avg}分 \n(距離: ${distStr}m / 共 ${actualArrows} 箭)`;
+            
+            // 建立分數標籤區
+            let textStats = '';
+            Object.keys(counts).forEach(k => {
+                if(counts[k] > 0) {
+                    // X與10分用亮眼顏色，其他一般
+                    let bgColor = (k === 'X' || k === '10' || k === '9') ? '#FEF9E7' : '#f9f9f9';
+                    let bColor = getScoreColor(k);
+                    textStats += `<span class="stats-badge" style="background:${bgColor}; border-color:${bColor};">${k}: ${counts[k]}</span>`;
+                }
+            });
+            document.getElementById('statsDetails').innerHTML = textStats;
+
+            // 準備圓餅圖資料
+            const labels = Object.keys(counts).filter(k => counts[k] > 0);
+            const data = labels.map(k => counts[k]);
+            const bgColors = labels.map(k => getScoreColor(k));
+
+            const ctx = document.getElementById('statsChart').getContext('2d');
+            if (statsChartInstance) statsChartInstance.destroy(); // 清除舊圖表
+            
+            statsChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: bgColors,
+                        borderWidth: 1,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+
+            document.getElementById('statsModalUI').style.display = 'flex';
+        }
+
+        // ========== 匯出圖片邏輯 ==========
         function exportScoreToImage(id) {
             const history = JSON.parse(localStorage.getItem('archeryHistory')) || [];
             const record = history.find(h => h.id === id); if (!record) return;
@@ -916,6 +1034,10 @@
             document.getElementById('exName').innerText = record.name;
             const distStr = record.distance ? record.distance : '-';
             document.getElementById('exTotal').innerText = `總分: ${record.totalScore} (${distStr}m)`;
+            
+            // 輸出圖片增加平均分數
+            const avgStr = record.avgScore ? record.avgScore : '-';
+            document.getElementById('exAvg').innerText = `平均: ${avgStr} 分`;
 
             let thead = '<tr><th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">趟</th>';
             for (let i = 1; i <= record.arrows; i++) thead += `<th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">${i}</th>`;
