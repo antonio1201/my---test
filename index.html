@@ -14,6 +14,7 @@
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3069/3069186.png">
 
     <title>射箭動作線性觀察與控制系統</title>
+    <!-- 引入外部套件 -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -70,7 +71,7 @@
         .score-nav button.active { background: #3498DB; color: white; border-color: #2980B9; }
         
         .setup-group { margin-bottom: 15px; text-align: left; font-size: 16px; display: flex; align-items: center; }
-        .setup-group label { min-width: 140px; font-weight: bold; color: #333; }
+        .setup-group label { min-width: 130px; font-weight: bold; color: #333; }
         .setup-group input, .setup-group select { font-size: 16px; text-align: center; padding: 5px; border-radius: 5px; border: 1px solid #ccc; flex-grow: 1; }
         
         .start-score-btn { background: #2ECC71; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px;}
@@ -96,7 +97,7 @@
         .save-score-btn { background: #F39C12; color: white; padding: 10px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; flex-grow: 1; }
         .reset-score-btn { background: #E74C3C; color: white; padding: 10px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; flex-grow: 1; }
         
-        /* 歷史紀錄與瞄準器列表 */
+        /* 歷史紀錄與列表 */
         .history-list, .sight-list { text-align: left; max-height: 50vh; overflow-y: auto; padding-right: 5px;}
         .history-item, .sight-item { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 5px; background: #fafafa; }
         .history-item input { width: 100%; border: none; font-weight: bold; font-size: 16px; border-bottom: 1px dashed #ccc; padding: 2px 0; margin-bottom: 5px; background: transparent; color: #2C3E50; box-sizing: border-box; }
@@ -109,6 +110,10 @@
         
         .stats-details-badges { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-bottom: 15px; }
         .stats-badge { padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: bold; background: #eee; color: #333; border: 1px solid #ddd; }
+        
+        /* 骨架開關設定專用 */
+        .pose-toggles { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; text-align: left; }
+        .pose-toggle-item { display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: bold; padding: 12px; background: #f9f9f9; border-radius: 8px; border: 1px solid #eee; }
         
         /* 媒體庫 */
         #gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; justify-items: center;}
@@ -138,6 +143,7 @@
         <button id="menuScoreBtn">🎯 計分系統</button>
         <button id="menuMatchBtn">⚔️ 雙人對抗賽</button>
         <button id="menuSightBtn">📏 瞄準器紀錄</button>
+        <button id="menuPoseBtn">🧍 骨架顯示設定</button>
         <button id="menuGalleryBtn">📸 媒體紀錄庫</button>
     </div>
 
@@ -164,7 +170,35 @@
         <canvas id="outputCanvas"></canvas>
     </div>
 
-    <!-- 1. 媒體紀錄庫 -->
+    <!-- 1. 骨架顯示設定 -->
+    <div id="poseModalUI" class="modal">
+        <div class="score-container">
+            <div class="score-header">
+                <h3 style="margin:0; color: #2C3E50;">🧍 骨架顯示設定</h3>
+                <span id="closePoseModal" style="font-size: 28px; cursor: pointer; font-weight: bold;">&times;</span>
+            </div>
+            <div class="pose-toggles">
+                <div class="pose-toggle-item">
+                    <span>重心 (中心線)</span>
+                    <label class="switch"><input type="checkbox" id="toggleCG" checked><span class="slider round"></span></label>
+                </div>
+                <div class="pose-toggle-item">
+                    <span>鼻尖 (頭部對齊)</span>
+                    <label class="switch"><input type="checkbox" id="toggleNose" checked><span class="slider round"></span></label>
+                </div>
+                <div class="pose-toggle-item">
+                    <span>手部 (手臂連線)</span>
+                    <label class="switch"><input type="checkbox" id="toggleArms" checked><span class="slider round"></span></label>
+                </div>
+                <div class="pose-toggle-item">
+                    <span>身體 (軀幹連線)</span>
+                    <label class="switch"><input type="checkbox" id="toggleBody" checked><span class="slider round"></span></label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 媒體紀錄庫 -->
     <div id="galleryModalUI" class="modal">
         <div class="gallery-container" id="galleryContainer">
             <div class="gallery-header">
@@ -191,29 +225,30 @@
         <div class="modal-content-wrapper" id="modalContent"></div>
     </div>
 
-    <!-- 2. 瞄準器紀錄系統 -->
+    <!-- 3. 瞄準器紀錄系統 -->
     <div id="sightModalUI" class="modal">
         <div class="sight-container">
             <div class="score-header">
                 <h3 style="margin:0; color: #2C3E50;">📏 瞄準器紀錄</h3>
                 <span id="closeSightModal" style="font-size: 28px; cursor: pointer; font-weight: bold;">&times;</span>
             </div>
+            <!-- 縮短長度的優化 -->
             <div class="setup-group">
-                <label style="min-width: 70px;">距離(m):</label>
-                <input type="number" id="sightDist" placeholder="例如: 70" style="width:60px;">
-                <label style="min-width: 50px; margin-left:10px;">刻度:</label>
-                <input type="text" id="sightMark" placeholder="例如: 7.5">
+                <label style="min-width: 60px;">距離:</label>
+                <input type="number" id="sightDist" placeholder="m" style="width:60px; flex-grow:0;">
+                <label style="min-width: 45px; margin-left:10px;">刻度:</label>
+                <input type="text" id="sightMark" placeholder="例如: 7.5" style="width:75px; flex-grow:0;">
             </div>
             <div class="setup-group">
-                <label style="min-width: 70px;">備註:</label>
-                <input type="text" id="sightNote" placeholder="例如: 大雨、左風">
+                <label style="min-width: 60px;">備註:</label>
+                <input type="text" id="sightNote" placeholder="例如: 左風、下雨">
             </div>
             <button class="start-score-btn" onclick="saveSightMark()" style="margin-bottom:15px;">➕ 新增紀錄</button>
             <div class="sight-list" id="sightList"></div>
         </div>
     </div>
 
-    <!-- 3. 雙人對抗賽系統 -->
+    <!-- 4. 雙人對抗賽系統 -->
     <div id="matchModalUI" class="modal">
         <div class="match-container">
             <div class="score-header">
@@ -253,7 +288,6 @@
                     <table class="score-table" id="matchTable"></table>
                 </div>
                 
-                <!-- 對抗賽專用鍵盤 -->
                 <div class="keypad">
                     <button class="btn-x" onclick="inputMatchScore('X')">X</button>
                     <button class="btn-10" onclick="inputMatchScore('10')">10</button>
@@ -278,7 +312,7 @@
         </div>
     </div>
 
-    <!-- 4. 個人計分系統 -->
+    <!-- 5. 個人計分系統 -->
     <div id="scoreModalUI" class="modal">
         <div class="score-container">
             <div class="score-header">
@@ -396,18 +430,27 @@
         document.getElementById('menuGalleryBtn').addEventListener('click', () => { toggleMenu(false); document.getElementById('galleryModalUI').style.display = 'flex'; });
         document.getElementById('menuSightBtn').addEventListener('click', () => { toggleMenu(false); document.getElementById('sightModalUI').style.display = 'flex'; renderSightMarks(); });
         document.getElementById('menuMatchBtn').addEventListener('click', () => { toggleMenu(false); document.getElementById('matchModalUI').style.display = 'flex'; });
+        document.getElementById('menuPoseBtn').addEventListener('click', () => { toggleMenu(false); document.getElementById('poseModalUI').style.display = 'flex'; });
 
         document.getElementById('closeGalleryModal').addEventListener('click', () => { document.getElementById('galleryModalUI').style.display = 'none'; });
         document.getElementById('closeScoreModal').addEventListener('click', () => { document.getElementById('scoreModalUI').style.display = 'none'; });
         document.getElementById('closeSightModal').addEventListener('click', () => { document.getElementById('sightModalUI').style.display = 'none'; });
         document.getElementById('closeMatchModal').addEventListener('click', () => { document.getElementById('matchModalUI').style.display = 'none'; });
         document.getElementById('closeStatsModal').addEventListener('click', () => { document.getElementById('statsModalUI').style.display = 'none'; });
+        document.getElementById('closePoseModal').addEventListener('click', () => { document.getElementById('poseModalUI').style.display = 'none'; });
 
         function showToast(msg) {
             const toast = document.getElementById('toastMsg');
             toast.innerText = msg; toast.style.display = 'block';
             setTimeout(() => { toast.style.display = 'none'; }, 2500);
         }
+
+        // ========== 骨架繪製控制 (開關設定) ==========
+        let drawOptions = { cg: true, nose: true, arms: true, body: true };
+        document.getElementById('toggleCG').addEventListener('change', e => drawOptions.cg = e.target.checked);
+        document.getElementById('toggleNose').addEventListener('change', e => drawOptions.nose = e.target.checked);
+        document.getElementById('toggleArms').addEventListener('change', e => drawOptions.arms = e.target.checked);
+        document.getElementById('toggleBody').addEventListener('change', e => drawOptions.body = e.target.checked);
 
         // ========== 相機與錄影邏輯 (維持不變) ==========
         const videoElement = document.getElementById('videoElement');
@@ -437,15 +480,23 @@
                 const drawLine = (pt1, pt2, color, thickness) => { canvasCtx.beginPath(); canvasCtx.moveTo(pt1.x * w, pt1.y * h); canvasCtx.lineTo(pt2.x * w, pt2.y * h); canvasCtx.strokeStyle = color; canvasCtx.lineWidth = thickness; canvasCtx.stroke(); };
                 const drawCircle = (pt, radius, color) => { canvasCtx.beginPath(); canvasCtx.arc(pt.x * w, pt.y * h, radius, 0, 2 * Math.PI); canvasCtx.fillStyle = color; canvasCtx.fill(); };
 
-                drawLine({x: lm[0].x, y: 0}, {x: lm[0].x, y: 1}, 'rgb(135, 206, 235)', 2); drawCircle(lm[0], 8, 'rgb(135, 206, 235)');
-                const upperMidX = (lm[11].x + lm[12].x) / 2; const lowerMidX = (lm[23].x + lm[24].x) / 2; drawLine({x: upperMidX, y: 0}, {x: lowerMidX, y: 1}, 'rgb(0, 100, 255)', 3);
-                [[11, 23], [12, 24], [23, 24], [11, 12]].forEach(([p1, p2]) => { drawLine(lm[p1], lm[p2], 'rgb(100, 100, 100)', 2); drawCircle(lm[p1], 6, 'rgb(150, 150, 150)'); drawCircle(lm[p2], 6, 'rgb(150, 150, 150)'); });
-                const checkAndDrawArm = (pts) => {
-                    const straight = isStraight(lm[pts[0]], lm[pts[1]], lm[pts[2]]) && isStraight(lm[pts[1]], lm[pts[2]], lm[pts[3]]);
-                    const color = straight ? 'rgb(0, 255, 0)' : 'rgb(255, 0, 0)';
-                    for (let i = 0; i < pts.length - 1; i++) { drawLine(lm[pts[i]], lm[pts[i+1]], color, 6); drawCircle(lm[pts[i]], 8, color); drawCircle(lm[pts[i+1]], 8, color); }
-                };
-                checkAndDrawArm([11, 13, 15, 17]); checkAndDrawArm([12, 14, 16, 18]);
+                if (drawOptions.nose) {
+                    drawLine({x: lm[0].x, y: 0}, {x: lm[0].x, y: 1}, 'rgb(135, 206, 235)', 2); drawCircle(lm[0], 8, 'rgb(135, 206, 235)');
+                }
+                if (drawOptions.cg) {
+                    const upperMidX = (lm[11].x + lm[12].x) / 2; const lowerMidX = (lm[23].x + lm[24].x) / 2; drawLine({x: upperMidX, y: 0}, {x: lowerMidX, y: 1}, 'rgb(0, 100, 255)', 3);
+                }
+                if (drawOptions.body) {
+                    [[11, 23], [12, 24], [23, 24], [11, 12]].forEach(([p1, p2]) => { drawLine(lm[p1], lm[p2], 'rgb(100, 100, 100)', 2); drawCircle(lm[p1], 6, 'rgb(150, 150, 150)'); drawCircle(lm[p2], 6, 'rgb(150, 150, 150)'); });
+                }
+                if (drawOptions.arms) {
+                    const checkAndDrawArm = (pts) => {
+                        const straight = isStraight(lm[pts[0]], lm[pts[1]], lm[pts[2]]) && isStraight(lm[pts[1]], lm[pts[2]], lm[pts[3]]);
+                        const color = straight ? 'rgb(0, 255, 0)' : 'rgb(255, 0, 0)';
+                        for (let i = 0; i < pts.length - 1; i++) { drawLine(lm[pts[i]], lm[pts[i+1]], color, 6); drawCircle(lm[pts[i]], 8, color); drawCircle(lm[pts[i+1]], 8, color); }
+                    };
+                    checkAndDrawArm([11, 13, 15, 17]); checkAndDrawArm([12, 14, 16, 18]);
+                }
             }
             if (isCounting) {
                 const elapsed = (Date.now() - countdownStartTime) / 1000; const remaining = Math.ceil(countdownVal - elapsed);
@@ -641,20 +692,24 @@
             }
         };
 
-        // ========== 雙人對抗賽邏輯 ==========
-        let matchData = []; // [endIndex][playerIndex][arrowIndex] -> [5][2][3]
+        // ========== 雙人對抗賽邏輯 (加射系統 Shoot-Off) ==========
+        let matchData = []; 
         let mEnd = 0, mPlayer = 0, mArrow = 0;
         let matchType = 'recurve';
         let p1Name = "A", p2Name = "B";
+        
+        let isShootOff = false;
+        let shootOffData = [null, null];
+        let shootOffWinner = null; // null, 'tie', 0, 1
 
         function startMatch() {
             matchType = document.getElementById('matchType').value;
             p1Name = document.getElementById('matchP1Name').value || "選手 A";
             p2Name = document.getElementById('matchP2Name').value || "選手 B";
             
-            // 初始化 5趟，每趟 2人，每人 3支箭
             matchData = Array.from({length: 5}, () => [Array(3).fill(null), Array(3).fill(null)]);
             mEnd = 0; mPlayer = 0; mArrow = 0;
+            isShootOff = false; shootOffData = [null, null]; shootOffWinner = null;
             
             document.getElementById('matchSetupSection').style.display = 'none';
             document.getElementById('matchScoringSection').style.display = 'block';
@@ -667,128 +722,198 @@
         }
 
         window.setMatchActiveCell = function(endIdx, playerIdx, arrowIdx) {
-            mEnd = endIdx; mPlayer = playerIdx; mArrow = arrowIdx; renderMatchTable();
+            if (endIdx === 'so') { mPlayer = playerIdx; } 
+            else { mEnd = endIdx; mPlayer = playerIdx; mArrow = arrowIdx; }
+            renderMatchTable();
         };
+
+        window.resolveShootOff = function(winnerIdx) {
+            shootOffWinner = winnerIdx;
+            renderMatchTable();
+        }
+        window.resetShootOff = function() {
+            shootOffData = [null, null]; shootOffWinner = null; mPlayer = 0;
+            renderMatchTable();
+        }
 
         function renderMatchTable() {
             const table = document.getElementById('matchTable'); table.innerHTML = '';
             
             let p1TotalScore = 0, p2TotalScore = 0;
             let p1SetPoints = 0, p2SetPoints = 0;
-            
-            let thead = `<tr><th>趟</th><th style="min-width:50px;">選手</th><th>1</th><th>2</th><th>3</th><th>小計</th><th>${matchType==='recurve'?'積點':'總計'}</th></tr>`;
-            table.innerHTML += thead;
-
-            let matchOver = false;
             let statusText = "";
 
             for (let e = 0; e < 5; e++) {
                 let p1EndSum = 0, p2EndSum = 0;
-                let p1ArrowsStr = "", p2ArrowsStr = "";
                 let p1EndFull = true, p2EndFull = true;
 
-                // Player 1 (Index 0)
                 for (let a = 0; a < 3; a++) {
-                    const val = matchData[e][0][a];
-                    p1EndSum += parseScore(val);
-                    if (val === null) p1EndFull = false;
-                    let activeClass = (e === mEnd && mPlayer === 0 && a === mArrow) ? 'active-cell' : '';
-                    p1ArrowsStr += `<td class="score-cell ${activeClass}" onclick="setMatchActiveCell(${e}, 0, ${a})">${val !== null ? val : ''}</td>`;
+                    const v1 = matchData[e][0][a]; p1EndSum += parseScore(v1); if (v1 === null) p1EndFull = false;
+                    const v2 = matchData[e][1][a]; p2EndSum += parseScore(v2); if (v2 === null) p2EndFull = false;
                 }
                 
-                // Player 2 (Index 1)
-                for (let a = 0; a < 3; a++) {
-                    const val = matchData[e][1][a];
-                    p2EndSum += parseScore(val);
-                    if (val === null) p2EndFull = false;
-                    let activeClass = (e === mEnd && mPlayer === 1 && a === mArrow) ? 'active-cell' : '';
-                    p2ArrowsStr += `<td class="score-cell ${activeClass}" onclick="setMatchActiveCell(${e}, 1, ${a})">${val !== null ? val : ''}</td>`;
-                }
-
                 p1TotalScore += p1EndSum; p2TotalScore += p2EndSum;
 
-                let p1SetDisp = "-", p2SetDisp = "-";
-                // 只有當雙方這趟都射完才結算點數
                 if (p1EndFull && p2EndFull) {
                     if (matchType === 'recurve') {
                         if (p1EndSum > p2EndSum) p1SetPoints += 2;
                         else if (p2EndSum > p1EndSum) p2SetPoints += 2;
                         else { p1SetPoints += 1; p2SetPoints += 1; }
-                        p1SetDisp = p1SetPoints; p2SetDisp = p2SetPoints;
-                    } else {
-                        p1SetDisp = p1TotalScore; p2SetDisp = p2TotalScore;
                     }
-                } else if (matchType === 'compound' && (p1EndSum > 0 || p2EndSum > 0)) {
-                    // 複合弓隨時顯示總計
-                    p1SetDisp = p1TotalScore; p2SetDisp = p2TotalScore;
-                }
-
-                let row1 = `<tr><td rowspan="2" style="background:#fff; border-bottom:2px solid #333;"><b>${e+1}</b></td>
-                            <td style="background:#EBF5FB;">${p1Name.substring(0,3)}</td>${p1ArrowsStr}
-                            <td style="background:#EBF5FB;"><b>${p1EndSum}</b></td><td style="background:#D6EAF8; font-weight:bold;">${p1SetDisp}</td></tr>`;
-                
-                let row2 = `<tr><td style="background:#FDEDEC; border-bottom:2px solid #333;">${p2Name.substring(0,3)}</td>${p2ArrowsStr}
-                            <td style="background:#FDEDEC; border-bottom:2px solid #333;"><b>${p2EndSum}</b></td><td style="background:#FADBD8; border-bottom:2px solid #333; font-weight:bold;">${p2SetDisp}</td></tr>`;
-                
-                table.innerHTML += row1 + row2;
-                
-                // 檢查是否提早結束 (反曲先得6點)
-                if (matchType === 'recurve' && (p1SetPoints >= 6 || p2SetPoints >= 6)) {
-                    matchOver = true;
-                    if (p1SetPoints >= 6) statusText = `🎉 ${p1Name} 獲得勝利！`;
-                    else statusText = `🎉 ${p2Name} 獲得勝利！`;
                 }
             }
 
-            // 若5趟結束
-            if (!matchOver && matchData[4][1][2] !== null) {
+            // 判斷是否結束與是否需要加射
+            if (!isShootOff) {
+                let matchOverNormal = false; let tied = false;
                 if (matchType === 'recurve') {
-                    if (p1SetPoints > p2SetPoints) statusText = `🎉 ${p1Name} 獲得勝利！`;
-                    else if (p2SetPoints > p1SetPoints) statusText = `🎉 ${p2Name} 獲得勝利！`;
-                    else statusText = "🤝 平手 (Shoot-off!)";
+                    if (p1SetPoints >= 6 || p2SetPoints >= 6) matchOverNormal = true;
+                    else if (matchData[4][1][2] !== null) { // 射滿5趟
+                        if (p1SetPoints === p2SetPoints) tied = true;
+                        else matchOverNormal = true;
+                    }
                 } else {
-                    if (p1TotalScore > p2TotalScore) statusText = `🎉 ${p1Name} 獲得勝利！`;
-                    else if (p2TotalScore > p1TotalScore) statusText = `🎉 ${p2Name} 獲得勝利！`;
-                    else statusText = "🤝 平手 (Shoot-off!)";
+                    if (matchData[4][1][2] !== null) {
+                        if (p1TotalScore === p2TotalScore) tied = true;
+                        else matchOverNormal = true;
+                    }
+                }
+
+                if (tied) {
+                    isShootOff = true; mPlayer = 0; shootOffData = [null, null]; shootOffWinner = null;
+                }
+            }
+
+            // 顯示加射專屬畫面
+            if (isShootOff) {
+                let s1Disp = matchType === 'recurve' ? `${p1SetPoints} 點` : `${p1TotalScore} 分`;
+                let s2Disp = matchType === 'recurve' ? `${p2SetPoints} 點` : `${p2TotalScore} 分`;
+                
+                let html = `
+                    <tr><th colspan="2" style="background:#f1c40f; color:#fff; font-size:18px;">🔥 加射 (Shoot-Off) 🔥</th></tr>
+                    <tr>
+                        <td style="font-size:18px; width:50%; padding:10px;">${p1Name}<br><b style="color:#2980B9">${s1Disp}</b></td>
+                        <td style="font-size:18px; width:50%; padding:10px;">${p2Name}<br><b style="color:#E74C3C">${s2Disp}</b></td>
+                    </tr>
+                    <tr>
+                        <td class="score-cell ${mPlayer===0?'active-cell':''}" style="font-size:24px; padding:15px; font-weight:bold;" onclick="setMatchActiveCell('so', 0, 0)">${shootOffData[0] !== null ? shootOffData[0] : '第一箭'}</td>
+                        <td class="score-cell ${mPlayer===1?'active-cell':''}" style="font-size:24px; padding:15px; font-weight:bold;" onclick="setMatchActiveCell('so', 1, 0)">${shootOffData[1] !== null ? shootOffData[1] : '第二箭'}</td>
+                    </tr>
+                `;
+                
+                if (shootOffWinner === 'tie') {
+                    html += `<tr><td colspan="2" style="padding:15px; background:#FDEDEC;">
+                        <p style="color:#E74C3C; font-weight:bold; margin-top:0;">加射分數相同！<br>請以靶心距離判定最終勝負：</p>
+                        <button onclick="resolveShootOff(0)" style="background:#2980B9; color:white; padding:8px 15px; border-radius:5px; border:none; margin:5px; font-weight:bold;">${p1Name} 較近 (勝)</button>
+                        <button onclick="resolveShootOff(1)" style="background:#E74C3C; color:white; padding:8px 15px; border-radius:5px; border:none; margin:5px; font-weight:bold;">${p2Name} 較近 (勝)</button>
+                        <br><button onclick="resetShootOff()" style="margin-top:10px; padding:5px 10px; border-radius:5px; border:1px solid #ccc; font-weight:bold;">雙方重新加射</button>
+                    </td></tr>`;
+                }
+
+                table.innerHTML = html;
+
+                if (shootOffWinner === 0) statusText = `🎉 加射結束，${p1Name} 獲得最終勝利！`;
+                else if (shootOffWinner === 1) statusText = `🎉 加射結束，${p2Name} 獲得最終勝利！`;
+                else statusText = "⚔️ 加射進行中，一箭定勝負...";
+                
+            } else {
+                // 正常顯示5趟畫面
+                let thead = `<tr><th>趟</th><th style="min-width:50px;">選手</th><th>1</th><th>2</th><th>3</th><th>小計</th><th>${matchType==='recurve'?'積點':'總計'}</th></tr>`;
+                table.innerHTML = thead;
+                
+                for (let e = 0; e < 5; e++) {
+                    let p1ArrowsStr = "", p2ArrowsStr = "";
+                    let p1Sum = 0, p2Sum = 0;
+                    
+                    for (let a = 0; a < 3; a++) {
+                        const val = matchData[e][0][a]; p1Sum += parseScore(val);
+                        let aClass = (e === mEnd && mPlayer === 0 && a === mArrow) ? 'active-cell' : '';
+                        p1ArrowsStr += `<td class="score-cell ${aClass}" onclick="setMatchActiveCell(${e}, 0, ${a})">${val !== null ? val : ''}</td>`;
+                    }
+                    for (let a = 0; a < 3; a++) {
+                        const val = matchData[e][1][a]; p2Sum += parseScore(val);
+                        let aClass = (e === mEnd && mPlayer === 1 && a === mArrow) ? 'active-cell' : '';
+                        p2ArrowsStr += `<td class="score-cell ${aClass}" onclick="setMatchActiveCell(${e}, 1, ${a})">${val !== null ? val : ''}</td>`;
+                    }
+                    
+                    let p1Disp = "-", p2Disp = "-";
+                    let e_p1Pts=0, e_p2Pts=0;
+                    for (let t=0; t<=e; t++) {
+                        let t_p1S=0, t_p2S=0; let full = true;
+                        for(let a=0;a<3;a++){ if(matchData[t][0][a]===null||matchData[t][1][a]===null) full=false; t_p1S+=parseScore(matchData[t][0][a]); t_p2S+=parseScore(matchData[t][1][a]); }
+                        if(full) { if(t_p1S>t_p2S) e_p1Pts+=2; else if (t_p2S>t_p1S) e_p2Pts+=2; else { e_p1Pts+=1; e_p2Pts+=1; } }
+                    }
+                    if (matchType === 'recurve') { p1Disp = e_p1Pts; p2Disp = e_p2Pts; }
+                    else {
+                        let t_p1T=0, t_p2T=0;
+                        for (let t=0; t<=e; t++) { for(let a=0;a<3;a++){ t_p1T+=parseScore(matchData[t][0][a]); t_p2T+=parseScore(matchData[t][1][a]); } }
+                        p1Disp = t_p1T; p2Disp = t_p2T;
+                    }
+
+                    let row1 = `<tr><td rowspan="2" style="background:#fff; border-bottom:2px solid #333;"><b>${e+1}</b></td>
+                                <td style="background:#EBF5FB;">${p1Name.substring(0,3)}</td>${p1ArrowsStr}
+                                <td style="background:#EBF5FB;"><b>${p1Sum}</b></td><td style="background:#D6EAF8; font-weight:bold;">${p1Disp}</td></tr>`;
+                    let row2 = `<tr><td style="background:#FDEDEC; border-bottom:2px solid #333;">${p2Name.substring(0,3)}</td>${p2ArrowsStr}
+                                <td style="background:#FDEDEC; border-bottom:2px solid #333;"><b>${p2Sum}</b></td><td style="background:#FADBD8; border-bottom:2px solid #333; font-weight:bold;">${p2Disp}</td></tr>`;
+                    table.innerHTML += row1 + row2;
+                }
+                
+                if (matchType === 'recurve' && (p1SetPoints >= 6 || p2SetPoints >= 6)) {
+                    if (p1SetPoints >= 6) statusText = `🎉 ${p1Name} 獲得勝利！`; else statusText = `🎉 ${p2Name} 獲得勝利！`;
+                } else if (matchData[4][1][2] !== null) {
+                    if (matchType === 'recurve') {
+                        if (p1SetPoints > p2SetPoints) statusText = `🎉 ${p1Name} 獲得勝利！`;
+                        else if (p2SetPoints > p1SetPoints) statusText = `🎉 ${p2Name} 獲得勝利！`;
+                    } else {
+                        if (p1TotalScore > p2TotalScore) statusText = `🎉 ${p1Name} 獲得勝利！`;
+                        else if (p2TotalScore > p1TotalScore) statusText = `🎉 ${p2Name} 獲得勝利！`;
+                    }
                 }
             }
 
             document.getElementById('matchStatusText').innerText = statusText;
-
             if (matchType === 'recurve') {
-                document.getElementById('p1DisplayScore').innerText = `${p1Name}: ${p1SetPoints}點`;
-                document.getElementById('p2DisplayScore').innerText = `${p2Name}: ${p2SetPoints}點`;
+                document.getElementById('p1DisplayScore').innerText = `${p1Name}: ${p1SetPoints}點`; document.getElementById('p2DisplayScore').innerText = `${p2Name}: ${p2SetPoints}點`;
             } else {
-                document.getElementById('p1DisplayScore').innerText = `${p1Name}: ${p1TotalScore}分`;
-                document.getElementById('p2DisplayScore').innerText = `${p2Name}: ${p2TotalScore}分`;
+                document.getElementById('p1DisplayScore').innerText = `${p1Name}: ${p1TotalScore}分`; document.getElementById('p2DisplayScore').innerText = `${p2Name}: ${p2TotalScore}分`;
             }
         }
 
         window.inputMatchScore = function(val) {
-            if (mEnd >= 5) return;
-            
-            matchData[mEnd][mPlayer][mArrow] = val;
-            
-            mArrow++;
-            if (mArrow >= 3) {
-                mArrow = 0;
-                mPlayer++;
-                if (mPlayer >= 2) {
-                    mPlayer = 0;
-                    mEnd++;
+            if (isShootOff) {
+                if (shootOffWinner !== null) return;
+                shootOffData[mPlayer] = val;
+                if (mPlayer === 0) mPlayer = 1;
+                else {
+                    let s1 = parseScore(shootOffData[0]); let s2 = parseScore(shootOffData[1]);
+                    if (s1 > s2) shootOffWinner = 0; else if (s2 > s1) shootOffWinner = 1; else shootOffWinner = 'tie';
                 }
+                renderMatchTable(); return;
             }
+
+            if (mEnd >= 5) return;
+            matchData[mEnd][mPlayer][mArrow] = val;
+            mArrow++;
+            if (mArrow >= 3) { mArrow = 0; mPlayer++; if (mPlayer >= 2) { mPlayer = 0; mEnd++; } }
             renderMatchTable();
         };
 
         window.undoMatchScore = function() {
+            if (isShootOff) {
+                if (shootOffWinner !== null) { shootOffWinner = null; if (shootOffData[1] !== null) mPlayer = 1; }
+                else if (shootOffData[1] !== null) { shootOffData[1] = null; mPlayer = 1; }
+                else if (shootOffData[0] !== null) { shootOffData[0] = null; mPlayer = 0; }
+                else {
+                    isShootOff = false; mEnd = 4; mPlayer = 1; mArrow = 2; matchData[4][1][2] = null;
+                }
+                renderMatchTable(); return;
+            }
+
             if (mEnd === 0 && mPlayer === 0 && mArrow === 0) return; 
             if (mArrow === 0) { 
                 if (mPlayer === 1) { mPlayer = 0; mArrow = 2; }
                 else { mEnd--; mPlayer = 1; mArrow = 2; }
-            } else { 
-                mArrow--; 
-            }
+            } else { mArrow--; }
             matchData[mEnd][mPlayer][mArrow] = null;
             renderMatchTable();
         };
@@ -797,25 +922,18 @@
             const now = new Date();
             const dateStr = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
             
-            // 計算最終結果存入
             let p1TotalScore = 0, p2TotalScore = 0, p1SetPoints = 0, p2SetPoints = 0;
             for (let e = 0; e < 5; e++) {
                 let p1Sum = 0, p2Sum = 0;
                 for (let a = 0; a < 3; a++) { p1Sum += parseScore(matchData[e][0][a]); p2Sum += parseScore(matchData[e][1][a]); }
                 p1TotalScore += p1Sum; p2TotalScore += p2Sum;
-                if (p1Sum > p2Sum) p1SetPoints += 2;
-                else if (p2Sum > p1Sum) p2SetPoints += 2;
-                else if (p1Sum > 0 || p2Sum > 0) { p1SetPoints += 1; p2SetPoints += 1; }
+                if (p1Sum > p2Sum) p1SetPoints += 2; else if (p2Sum > p1Sum) p2SetPoints += 2; else if (p1Sum > 0 || p2Sum > 0) { p1SetPoints += 1; p2SetPoints += 1; }
             }
 
             const record = { 
-                id: Date.now(), 
-                isMatch: true, // 標記為對抗賽
-                matchType: matchType,
-                name: `${dateStr} 對抗賽`, 
-                p1Name: p1Name, p2Name: p2Name,
-                p1Total: p1TotalScore, p2Total: p2TotalScore,
-                p1Set: p1SetPoints, p2Set: p2SetPoints,
+                id: Date.now(), isMatch: true, matchType: matchType, name: `${dateStr} 對抗賽`, 
+                p1Name: p1Name, p2Name: p2Name, p1Total: p1TotalScore, p2Total: p2TotalScore, p1Set: p1SetPoints, p2Set: p2SetPoints,
+                isShootOff: isShootOff, shootOffData: isShootOff ? shootOffData : null, shootOffWinner: shootOffWinner,
                 data: JSON.parse(JSON.stringify(matchData)) 
             };
             
@@ -846,7 +964,6 @@
             else { customInput.style.display = 'none'; }
         });
 
-        // 修正：直接跳轉計分板
         document.getElementById('startScoreBtn').addEventListener('click', () => {
             totalEnds = parseInt(document.getElementById('inputEnds').value) || 6;
             arrowsPerEnd = parseInt(document.getElementById('inputArrows').value) || 6;
@@ -857,7 +974,7 @@
             scoreData = Array.from({ length: totalEnds }, () => Array(arrowsPerEnd).fill(null));
             currentEndIndex = 0; currentArrowIndex = 0;
             renderScoreTable(); 
-            switchTab('Scoring'); // 這裡確保了會切換畫面
+            switchTab('Scoring'); 
         });
 
         document.getElementById('resetScoreBtn').addEventListener('click', () => { if(confirm('確定要重新開始嗎？')) document.getElementById('startScoreBtn').click(); });
@@ -883,7 +1000,7 @@
             }
             
             currentAvg = actualArrows > 0 ? (currentGrandTotal / actualArrows).toFixed(2) : "0.00";
-            document.getElementById('grandTotal').innerText = currentGrandTotal; // 確保這個標籤存在
+            document.getElementById('grandTotal').innerText = currentGrandTotal; 
             document.getElementById('displayScoreAvg').innerText = currentAvg;
         }
 
@@ -931,12 +1048,23 @@
                 
                 const summaryDiv = document.createElement('div'); summaryDiv.className = 'history-summary';
                 
-                // 區分對抗賽與一般個人賽的顯示
                 if (rec.isMatch) {
                     const matchTypeStr = rec.matchType === 'recurve' ? '反曲對抗 (局分制)' : '複合對抗 (總分制)';
                     const p1ScoreDisp = rec.matchType === 'recurve' ? `${rec.p1Set}點` : `${rec.p1Total}分`;
                     const p2ScoreDisp = rec.matchType === 'recurve' ? `${rec.p2Set}點` : `${rec.p2Total}分`;
-                    summaryDiv.innerHTML = `<span style="flex-grow:1;"><b>⚔️ ${matchTypeStr}</b><br><span style="color:#2980B9;">${rec.p1Name} (${p1ScoreDisp})</span> vs <span style="color:#E74C3C;">${rec.p2Name} (${p2ScoreDisp})</span></span>`;
+                    
+                    let winnerText = "";
+                    if (rec.isShootOff) {
+                        let p1SO = rec.shootOffData[0] || '0'; let p2SO = rec.shootOffData[1] || '0';
+                        let winnerName = rec.shootOffWinner === 0 ? rec.p1Name : (rec.shootOffWinner === 1 ? rec.p2Name : '未定');
+                        winnerText = `<br><span style="color:#F39C12; font-size:12px;">加射: ${p1SO} - ${p2SO} (${winnerName} 勝)</span>`;
+                    } else {
+                        let winnerName = "";
+                        if (rec.matchType === 'recurve') { if(rec.p1Set > rec.p2Set) winnerName = rec.p1Name; else if (rec.p2Set > rec.p1Set) winnerName = rec.p2Name; } 
+                        else { if(rec.p1Total > rec.p2Total) winnerName = rec.p1Name; else if (rec.p2Total > rec.p1Total) winnerName = rec.p2Name; }
+                        if (winnerName) winnerText = `<br><span style="color:#2ECC71; font-size:12px;">🏆 ${winnerName} 獲勝</span>`;
+                    }
+                    summaryDiv.innerHTML = `<span style="flex-grow:1;"><b>⚔️ ${matchTypeStr}</b><br><span style="color:#2980B9;">${rec.p1Name} (${p1ScoreDisp})</span> vs <span style="color:#E74C3C;">${rec.p2Name} (${p2ScoreDisp})</span>${winnerText}</span>`;
                 } else {
                     const distStr = rec.distance ? rec.distance : '-';
                     const avgStr = rec.avgScore ? rec.avgScore : '-';
@@ -953,7 +1081,6 @@
                     }
                 });
 
-                // 對抗賽不支援一般的截圖與圓餅圖 (結構不同)
                 if (!rec.isMatch) {
                     const exportBtn = document.createElement('button'); exportBtn.className = 'export-history-btn'; exportBtn.innerText = '🖼️ 轉成相片';
                     exportBtn.addEventListener('click', () => exportScoreToImage(rec.id));
@@ -998,7 +1125,6 @@
             });
             document.getElementById('statsDetails').innerHTML = textStats;
 
-            // 圓餅圖資料也強制依照高分到低分排序
             const labels = scoreOrder.filter(k => counts[k] > 0);
             const data = labels.map(k => counts[k]);
             const bgColors = labels.map(k => getScoreColor(k));
