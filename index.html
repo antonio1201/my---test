@@ -170,9 +170,12 @@
         .score-nav button { padding: 8px 12px; cursor: pointer; background: #eee; border: 1px solid #ccc; border-radius: 5px; font-weight: bold; flex-grow: 1;}
         .score-nav button.active { background: #3498DB; color: white; border-color: #2980B9; }
         
-        .setup-group { margin-bottom: 15px; text-align: left; font-size: 16px; }
-        .setup-group input { width: 60px; font-size: 16px; text-align: center; margin-left: 10px; padding: 5px; }
-        .start-score-btn { background: #2ECC71; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .setup-group { margin-bottom: 15px; text-align: left; font-size: 16px; display: flex; align-items: center; }
+        .setup-group label { min-width: 130px; }
+        .setup-group input { width: 60px; font-size: 16px; text-align: center; margin-left: 5px; padding: 5px; border-radius: 5px; border: 1px solid #ccc; }
+        .setup-group select { font-size: 16px; padding: 5px; border-radius: 5px; margin-left: 5px; border: 1px solid #ccc; flex-grow: 1;}
+        
+        .start-score-btn { background: #2ECC71; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         
         .score-grid { overflow-x: auto; margin-bottom: 15px; }
         .score-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 16px; }
@@ -300,13 +303,29 @@
 
             <div id="sectionSetup">
                 <div class="setup-group">
-                    <label>預計射幾趟 (Ends)：</label>
+                    <label>預計趟數 (Ends)：</label>
                     <input type="number" id="inputEnds" value="6" min="1">
                 </div>
                 <div class="setup-group">
-                    <label>一趟幾支箭 (Arrows)：</label>
+                    <label>單趟箭數 (Arrows)：</label>
                     <input type="number" id="inputArrows" value="6" min="1">
                 </div>
+                
+                <div class="setup-group">
+                    <label>射箭距離 (Distance)：</label>
+                    <div style="display: flex; align-items: center; flex-grow: 1;">
+                        <select id="inputDistance">
+                            <option value="70">70 公尺</option>
+                            <option value="50">50 公尺</option>
+                            <option value="30">30 公尺</option>
+                            <option value="15">15 公尺</option>
+                            <option value="10">10 公尺</option>
+                            <option value="custom">自訂...</option>
+                        </select>
+                        <input type="number" id="inputCustomDistance" placeholder="m" style="display: none; width: 60px; margin-left: 5px;">
+                    </div>
+                </div>
+
                 <button class="start-score-btn" id="startScoreBtn">開始計分</button>
             </div>
 
@@ -382,7 +401,6 @@
                 const store = tx.objectStore('media');
                 const request = store.getAll();
                 request.onsuccess = () => {
-                    // 直接讀取所有資料並依照時間新到舊排序
                     mediaItems = request.result;
                     mediaItems.sort((a, b) => b.timestamp - a.timestamp);
                     renderGallery();
@@ -416,13 +434,12 @@
                 timestamp: Date.now(),
                 filename: file.name
             };
-            mediaItems.unshift(item); // 加到最前面
+            mediaItems.unshift(item); 
             saveToDB(item);
             renderGallery();
             showToast(`已存入紀錄庫 (${type==='image'?'照片':'影片'}已永久保留)`);
         }
 
-        // 載入網頁時自動讀取資料庫
         document.addEventListener('DOMContentLoaded', loadMediaFromDB);
 
         // ========== 紀錄庫 UI 與多選邏輯 ==========
@@ -437,7 +454,6 @@
                 return;
             }
 
-            // 更新多選模式的樣式
             if (isSelectMode) galleryContainer.parentElement.classList.add('select-mode-on');
             else galleryContainer.parentElement.classList.remove('select-mode-on');
 
@@ -447,7 +463,6 @@
                 div.className = 'gallery-item';
                 div.id = `media-${item.id}`;
                 
-                // 點擊事件 (區分多選與一般檢視)
                 div.onclick = () => {
                     if (isSelectMode) {
                         div.classList.toggle('selected');
@@ -491,7 +506,6 @@
                 toggleSelectModeBtn.innerText = '☑️ 多選模式';
                 toggleSelectModeBtn.style.background = '#34495E';
                 bulkActions.style.display = 'none';
-                // 取消所有選取
                 document.querySelectorAll('.gallery-item.selected').forEach(el => el.classList.remove('selected'));
             }
             renderGallery();
@@ -524,15 +538,12 @@
             if (navigator.canShare && navigator.canShare({ files: filesToSave })) {
                 try { await navigator.share({ files: filesToSave, title: '儲存選取的射箭紀錄' }); } catch (e) {}
             } else {
-                // 依序觸發下載
                 filesToSave.forEach(file => {
                     const url = URL.createObjectURL(file); 
                     const link = document.createElement('a'); link.href = url; link.download = file.name; 
                     document.body.appendChild(link); link.click(); document.body.removeChild(link); 
                 });
             }
-            
-            // 儲存後自動關閉多選模式
             toggleSelectModeBtn.click();
         });
 
@@ -737,6 +748,7 @@
         let scoreData = [];
         let totalEnds = 6;
         let arrowsPerEnd = 6;
+        let currentDistance = '70'; // 新增全域變數：距離
         let currentEndIndex = 0;
         let currentArrowIndex = 0;
 
@@ -755,9 +767,25 @@
             if (activeTab === 'History') renderHistory();
         }
 
+        // 新增：處理距離下拉選單變化
+        document.getElementById('inputDistance').addEventListener('change', function(e) {
+            const customInput = document.getElementById('inputCustomDistance');
+            if (e.target.value === 'custom') {
+                customInput.style.display = 'inline-block';
+                customInput.focus();
+            } else {
+                customInput.style.display = 'none';
+            }
+        });
+
         document.getElementById('startScoreBtn').addEventListener('click', () => {
             totalEnds = parseInt(document.getElementById('inputEnds').value) || 6;
             arrowsPerEnd = parseInt(document.getElementById('inputArrows').value) || 6;
+            
+            // 讀取選擇的距離
+            const distSelect = document.getElementById('inputDistance').value;
+            currentDistance = distSelect === 'custom' ? (document.getElementById('inputCustomDistance').value || '0') : distSelect;
+
             scoreData = Array.from({ length: totalEnds }, () => Array(arrowsPerEnd).fill(null));
             currentEndIndex = 0; currentArrowIndex = 0;
             renderScoreTable(); switchTab('Scoring');
@@ -825,7 +853,16 @@
             const now = new Date();
             const defaultName = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} 紀錄`;
             
-            const record = { id: Date.now(), name: defaultName, totalScore: grandTotal, ends: totalEnds, arrows: arrowsPerEnd, data: JSON.parse(JSON.stringify(scoreData)) };
+            // 將 currentDistance 存入紀錄中
+            const record = { 
+                id: Date.now(), 
+                name: defaultName, 
+                totalScore: grandTotal, 
+                ends: totalEnds, 
+                arrows: arrowsPerEnd, 
+                distance: currentDistance, // 新增距離資料
+                data: JSON.parse(JSON.stringify(scoreData)) 
+            };
             let history = JSON.parse(localStorage.getItem('archeryHistory')) || [];
             history.unshift(record); localStorage.setItem('archeryHistory', JSON.stringify(history));
             
@@ -848,7 +885,9 @@
                 });
                 
                 const summaryDiv = document.createElement('div'); summaryDiv.className = 'history-summary';
-                summaryDiv.innerHTML = `<span><b>總分: ${rec.totalScore}</b> (${rec.ends}趟x${rec.arrows}箭)</span>`;
+                // 顯示距離資訊 (如果是舊紀錄沒有 distance 屬性，會顯示 '-' )
+                const distStr = rec.distance ? rec.distance : '-';
+                summaryDiv.innerHTML = `<span><b>總分: ${rec.totalScore}</b> (${rec.ends}趟x${rec.arrows}箭 / ${distStr}m)</span>`;
                 
                 const actionsDiv = document.createElement('div'); actionsDiv.className = 'history-actions';
 
@@ -874,7 +913,10 @@
 
             const card = document.getElementById('exportCard');
             document.getElementById('exName').innerText = record.name;
-            document.getElementById('exTotal').innerText = `總分: ${record.totalScore}`;
+            
+            // 輸出圖片也顯示距離
+            const distStr = record.distance ? record.distance : '-';
+            document.getElementById('exTotal').innerText = `總分: ${record.totalScore} (${distStr}m)`;
 
             let thead = '<tr><th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">趟</th>';
             for (let i = 1; i <= record.arrows; i++) thead += `<th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">${i}</th>`;
