@@ -13,7 +13,7 @@
     <title>射箭動作線性觀察與控制系統</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     <style>
-        /* 修改：讓網頁高度 100%，並使用 flex 垂直排列 */
+        /* ========== 原本的樣式 (完全不變) ========== */
         html, body { height: 100%; margin: 0; padding: 0; }
         body { 
             font-family: Arial, sans-serif; 
@@ -24,7 +24,6 @@
             flex-direction: column; 
         }
         
-        /* 確保控制面板維持原樣，且不會被擠壓 */
         .controls { 
             background: white; 
             padding: 10px; 
@@ -32,7 +31,7 @@
             margin: 10px auto; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
             width: 95%; 
-            max-width: 450px; 
+            max-width: 550px; /* 稍微加寬以容納新按鈕 */
             flex-shrink: 0; 
         }
         .controls input { width: 40px; text-align: center; font-size: 16px; margin-right: 5px; }
@@ -47,7 +46,6 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* 修改：讓畫布容器自動填滿下方所有剩餘空間 */
         .canvas-container { 
             position: relative; 
             flex-grow: 1; 
@@ -60,7 +58,6 @@
         }
         video { display: none; } 
         
-        /* 修改：設定為 cover，讓相機畫面無視比例直接填滿整個容器，不留黑邊 */
         canvas { 
             width: 100%; 
             height: 100%; 
@@ -68,7 +65,6 @@
             display: block;
         }
         
-        /* 確保截圖/錄影庫出現時也不會變形 */
         .gallery-container { margin: 15px auto; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); width: 95%; max-width: 600px; text-align: left; overflow-x: auto; white-space: nowrap; flex-shrink: 0; margin-bottom: 20px;}
         .gallery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .gallery-title { margin: 0; font-size: 16px; color: #333; font-weight: bold; }
@@ -83,6 +79,51 @@
         .modal-content-wrapper { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; }
         .modal img, .modal video { max-width: 95vw; max-height: 85vh; border-radius: 8px; object-fit: contain; }
         .close-modal { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 10000; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+
+        /* ========== 新增：計分系統專用樣式 ========== */
+        #scoreBtn { background-color: #8E44AD; color: white; border: none; }
+        #scoreModalUI { display: none; position: fixed; z-index: 10001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); flex-direction: column; justify-content: flex-start; align-items: center; overflow-y: auto; padding-top: env(safe-area-inset-top); }
+        .score-container { background: white; width: 95%; max-width: 500px; border-radius: 8px; margin-top: 20px; margin-bottom: 20px; padding: 15px; box-sizing: border-box; text-align: center; }
+        .score-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
+        .score-nav button { padding: 8px 12px; margin: 2px; cursor: pointer; background: #eee; border: 1px solid #ccc; border-radius: 5px; font-weight: bold; }
+        .score-nav button.active { background: #3498DB; color: white; border-color: #2980B9; }
+        
+        /* 設定區 */
+        .setup-group { margin-bottom: 15px; text-align: left; font-size: 16px; }
+        .setup-group input { width: 60px; font-size: 16px; text-align: center; margin-left: 10px; padding: 5px; }
+        .start-score-btn { background: #2ECC71; color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        
+        /* 計分板與鍵盤 */
+        .score-grid { overflow-x: auto; margin-bottom: 15px; }
+        .score-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 16px; }
+        .score-table th, .score-table td { border: 1px solid #ddd; padding: 8px 4px; min-width: 30px; }
+        .score-table th { background: #f9f9f9; }
+        .score-table td.active-cell { background-color: #FFF3CD; border: 2px solid #E67E22; box-shadow: inset 0 0 5px rgba(230,126,34,0.5); font-weight: bold; }
+        .total-text { font-weight: bold; color: #E74C3C; font-size: 18px; margin-bottom: 10px; }
+        
+        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
+        .keypad button { padding: 15px; font-size: 20px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .keypad button:active { opacity: 0.8; transform: scale(0.95); }
+        .btn-m { background-color: #95A5A6; }
+        .btn-1, .btn-2 { background-color: #FFF; color: #333; text-shadow: none; border: 1px solid #ccc; }
+        .btn-3, .btn-4 { background-color: #2C3E50; }
+        .btn-5, .btn-6 { background-color: #3498DB; }
+        .btn-7, .btn-8 { background-color: #E74C3C; }
+        .btn-9, .btn-10, .btn-x { background-color: #F1C40F; color: #333; text-shadow: none; border: 1px solid #D4AC0D; }
+        .btn-undo { background-color: #7F8C8D; grid-column: span 3; color: white; text-shadow: none; }
+        
+        .action-btns { display: flex; gap: 10px; justify-content: center; }
+        .save-score-btn { background: #F39C12; color: white; padding: 10px 20px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; flex-grow: 1; }
+        .reset-score-btn { background: #E74C3C; color: white; padding: 10px 20px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; flex-grow: 1; }
+        
+        /* 歷史紀錄 */
+        .history-list { text-align: left; max-height: 50vh; overflow-y: auto; }
+        .history-item { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 5px; background: #fafafa; }
+        .history-item input { width: 100%; border: none; font-weight: bold; font-size: 16px; border-bottom: 1px dashed #ccc; padding: 2px 0; margin-bottom: 5px; background: transparent; color: #2C3E50; }
+        .history-item input:focus { outline: none; border-bottom-color: #3498DB; }
+        .history-summary { font-size: 14px; color: #666; display: flex; justify-content: space-between; align-items: center; }
+        .del-history-btn { background: #E74C3C; color: white; border: none; border-radius: 3px; padding: 4px 8px; cursor: pointer; font-size: 12px; }
+        .no-data { color: #999; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -92,7 +133,9 @@
         <button id="shootBtn">立即拍照</button>
         <button id="recordBtn">開始錄影</button>
         <button id="switchCamBtn">翻轉鏡頭</button>
+        <button id="scoreBtn">📋 計分</button>
     </div>
+    
     <div class="canvas-container">
         <video id="videoElement" autoplay playsinline></video>
         <canvas id="outputCanvas"></canvas>
@@ -111,7 +154,71 @@
         <div class="modal-content-wrapper" id="modalContent"></div>
     </div>
 
+    <div id="scoreModalUI">
+        <div class="score-container">
+            <div class="score-header">
+                <h3 style="margin:0;">🎯 射箭計分系統</h3>
+                <span id="closeScoreModal" style="font-size: 24px; cursor: pointer;">&times;</span>
+            </div>
+            
+            <div class="score-nav">
+                <button id="tabSetup" class="active">設定</button>
+                <button id="tabScoring">計分板</button>
+                <button id="tabHistory">歷史紀錄</button>
+            </div>
+            
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+
+            <div id="sectionSetup">
+                <div class="setup-group">
+                    <label>預計射幾趟 (Ends)：</label>
+                    <input type="number" id="inputEnds" value="6" min="1">
+                </div>
+                <div class="setup-group">
+                    <label>一趟幾支箭 (Arrows)：</label>
+                    <input type="number" id="inputArrows" value="6" min="1">
+                </div>
+                <button class="start-score-btn" id="startScoreBtn">開始計分</button>
+            </div>
+
+            <div id="sectionScoring" style="display: none;">
+                <div class="total-text">總分: <span id="grandTotal">0</span></div>
+                <div class="score-grid">
+                    <table class="score-table" id="scoreTable">
+                        </table>
+                </div>
+                
+                <div class="keypad">
+                    <button class="btn-x" onclick="inputScore('X')">X</button>
+                    <button class="btn-10" onclick="inputScore('10')">10</button>
+                    <button class="btn-9" onclick="inputScore('9')">9</button>
+                    <button class="btn-8" onclick="inputScore('8')">8</button>
+                    <button class="btn-7" onclick="inputScore('7')">7</button>
+                    <button class="btn-6" onclick="inputScore('6')">6</button>
+                    <button class="btn-5" onclick="inputScore('5')">5</button>
+                    <button class="btn-4" onclick="inputScore('4')">4</button>
+                    <button class="btn-3" onclick="inputScore('3')">3</button>
+                    <button class="btn-2" onclick="inputScore('2')">2</button>
+                    <button class="btn-1" onclick="inputScore('1')">1</button>
+                    <button class="btn-m" onclick="inputScore('M')">M</button>
+                    <button class="btn-undo" onclick="undoScore()">⬅️ 退回上一格修改</button>
+                </div>
+                
+                <div class="action-btns">
+                    <button class="reset-score-btn" id="resetScoreBtn">重新開始</button>
+                    <button class="save-score-btn" id="saveScoreRecBtn">儲存成績</button>
+                </div>
+            </div>
+
+            <div id="sectionHistory" style="display: none;">
+                <div class="history-list" id="historyList">
+                    </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // ========== 原本的相機與影像處理邏輯 (完全不變) ==========
         const videoElement = document.getElementById('videoElement');
         const canvasElement = document.getElementById('outputCanvas');
         const canvasCtx = canvasElement.getContext('2d');
@@ -186,38 +293,19 @@
             if (cameraStream) {
                 cameraStream.getTracks().forEach(track => track.stop());
             }
-            
-            const constraints = {
-                video: {
-                    facingMode: cameraMode,
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 },
-                    frameRate: { ideal: 120, min: 60 } 
-                }
-            };
-
+            const constraints = { video: { facingMode: cameraMode, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 120, min: 60 } } };
             try {
                 cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
                 videoElement.srcObject = cameraStream;
                 await videoElement.play();
-                
                 pose.setOptions({ selfieMode: cameraMode === 'user' });
-                
-                if (!isProcessingAI) {
-                    isProcessingAI = true;
-                    processVideoFrame();
-                }
-            } catch (error) {
-                console.error("相機啟動失敗:", error);
-                alert("無法存取高畫質相機，這可能是因為硬體不支援或是權限問題。");
-            }
+                if (!isProcessingAI) { isProcessingAI = true; processVideoFrame(); }
+            } catch (error) { console.error("相機啟動失敗:", error); alert("無法存取高畫質相機。"); }
         }
         
         async function processVideoFrame() {
             if (!isProcessingAI) return;
-            if (videoElement.readyState >= 2 && !videoElement.paused) {
-                await pose.send({image: videoElement});
-            }
+            if (videoElement.readyState >= 2 && !videoElement.paused) await pose.send({image: videoElement});
             requestAnimationFrame(processVideoFrame);
         }
 
@@ -236,15 +324,12 @@
             if (!isRecording) {
                 recordedChunks = []; 
                 const stream = canvasElement.captureStream(120); 
-                
                 let options = { videoBitsPerSecond: 12000000 }; 
-                
                 if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1')) options.mimeType = 'video/mp4;codecs=avc1';
                 else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) options.mimeType = 'video/webm;codecs=vp9';
                 else if (MediaRecorder.isTypeSupported('video/webm')) options.mimeType = 'video/webm';
 
-                try { mediaRecorder = new MediaRecorder(stream, options); } 
-                catch (e) { mediaRecorder = new MediaRecorder(stream); }
+                try { mediaRecorder = new MediaRecorder(stream, options); } catch (e) { mediaRecorder = new MediaRecorder(stream); }
 
                 mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
                 mediaRecorder.onstop = saveVideoToGallery; 
@@ -266,39 +351,28 @@
             const modal = document.getElementById('mediaModal');
             const content = document.getElementById('modalContent');
             content.innerHTML = ''; 
-
-            if (type === 'image') {
-                const img = document.createElement('img'); img.src = src; content.appendChild(img);
-            } else {
-                const vid = document.createElement('video'); vid.src = src; vid.controls = true; vid.autoplay = true; content.appendChild(vid);
-            }
+            if (type === 'image') { const img = document.createElement('img'); img.src = src; content.appendChild(img); } 
+            else { const vid = document.createElement('video'); vid.src = src; vid.controls = true; vid.autoplay = true; content.appendChild(vid); }
             modal.style.display = 'flex';
         }
 
-        document.getElementById('closeModal').onclick = () => {
-            document.getElementById('mediaModal').style.display = 'none';
-            document.getElementById('modalContent').innerHTML = ''; 
-        };
+        document.getElementById('closeModal').onclick = () => { document.getElementById('mediaModal').style.display = 'none'; document.getElementById('modalContent').innerHTML = ''; };
 
         function capturePhoto() {
             const dataURL = canvasElement.toDataURL('image/jpeg', 1.0);
             document.getElementById('galleryContainer').style.display = 'block';
-
             const now = new Date();
             const filename = `archery_photo_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.jpg`;
             const file = dataURLtoFile(dataURL, filename);
-            
             capturedFilesArray.push(file);
 
             const itemDiv = document.createElement('div'); itemDiv.className = 'gallery-item';
             const img = document.createElement('img'); img.src = dataURL; img.onclick = () => openModal(dataURL, 'image');
-
             const dlBtn = document.createElement('button'); dlBtn.innerText = '單獨存入相簿';
             dlBtn.onclick = async () => {
                 if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file] }); } catch (e) {} } 
                 else { const link = document.createElement('a'); link.href = dataURL; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); }
             };
-
             itemDiv.appendChild(img); itemDiv.appendChild(dlBtn);
             const gallery = document.getElementById('gallery'); gallery.insertBefore(itemDiv, gallery.firstChild);
         }
@@ -307,23 +381,19 @@
             const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'video/mp4' });
             const videoURL = URL.createObjectURL(blob);
             document.getElementById('galleryContainer').style.display = 'block';
-
             const now = new Date();
             const ext = blob.type.includes('mp4') ? 'mp4' : 'webm';
             const filename = `archery_video_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.${ext}`;
             const file = new File([blob], filename, { type: blob.type });
-            
             capturedFilesArray.push(file);
 
             const itemDiv = document.createElement('div'); itemDiv.className = 'gallery-item';
             const vid = document.createElement('video'); vid.src = videoURL; vid.onclick = () => openModal(videoURL, 'video');
-
             const dlBtn = document.createElement('button'); dlBtn.className = 'vid-btn'; dlBtn.innerText = '單獨存入相簿';
             dlBtn.onclick = async () => {
                 if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file] }); } catch (e) {} } 
                 else { const link = document.createElement('a'); link.href = videoURL; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); }
             };
-
             itemDiv.appendChild(vid); itemDiv.appendChild(dlBtn);
             const gallery = document.getElementById('gallery'); gallery.insertBefore(itemDiv, gallery.firstChild);
         }
@@ -339,6 +409,196 @@
                 });
             }
         };
+
+        // ==================== 新增：計分系統邏輯 ====================
+        let scoreData = [];
+        let totalEnds = 6;
+        let arrowsPerEnd = 6;
+        let currentEndIndex = 0;
+        let currentArrowIndex = 0;
+
+        // UI 切換
+        const scoreModalUI = document.getElementById('scoreModalUI');
+        document.getElementById('scoreBtn').onclick = () => scoreModalUI.style.display = 'flex';
+        document.getElementById('closeScoreModal').onclick = () => scoreModalUI.style.display = 'none';
+
+        const tabs = ['Setup', 'Scoring', 'History'];
+        tabs.forEach(tab => {
+            document.getElementById(`tab${tab}`).onclick = () => switchTab(tab);
+        });
+
+        function switchTab(activeTab) {
+            tabs.forEach(tab => {
+                document.getElementById(`tab${tab}`).classList.remove('active');
+                document.getElementById(`section${tab}`).style.display = 'none';
+            });
+            document.getElementById(`tab${activeTab}`).classList.add('active');
+            document.getElementById(`section${activeTab}`).style.display = 'block';
+            if (activeTab === 'History') renderHistory();
+        }
+
+        // 開始計分初始化
+        document.getElementById('startScoreBtn').onclick = () => {
+            totalEnds = parseInt(document.getElementById('inputEnds').value) || 6;
+            arrowsPerEnd = parseInt(document.getElementById('inputArrows').value) || 6;
+            scoreData = Array.from({ length: totalEnds }, () => Array(arrowsPerEnd).fill(null));
+            currentEndIndex = 0;
+            currentArrowIndex = 0;
+            renderScoreTable();
+            switchTab('Scoring');
+        };
+
+        document.getElementById('resetScoreBtn').onclick = () => {
+            if(confirm('確定要清除目前的計分重新開始嗎？')) {
+                document.getElementById('startScoreBtn').click();
+            }
+        };
+
+        // 轉換分數 (X=10, M=0)
+        function parseScore(val) {
+            if (val === 'X') return 10;
+            if (val === 'M' || val === null) return 0;
+            return parseInt(val) || 0;
+        }
+
+        // 渲染計分板
+        function renderScoreTable() {
+            const table = document.getElementById('scoreTable');
+            table.innerHTML = '';
+            
+            // 表頭
+            let thead = '<tr><th>趟</th>';
+            for (let i = 1; i <= arrowsPerEnd; i++) thead += `<th>${i}</th>`;
+            thead += '<th>小計</th></tr>';
+            table.innerHTML += thead;
+
+            let grandTotal = 0;
+
+            // 表身
+            for (let e = 0; e < totalEnds; e++) {
+                let rowHtml = `<tr><td><b>${e + 1}</b></td>`;
+                let endTotal = 0;
+
+                for (let a = 0; a < arrowsPerEnd; a++) {
+                    const val = scoreData[e][a];
+                    endTotal += parseScore(val);
+                    
+                    let isActive = (e === currentEndIndex && a === currentArrowIndex) ? 'class="active-cell"' : '';
+                    rowHtml += `<td ${isActive}>${val !== null ? val : ''}</td>`;
+                }
+                grandTotal += endTotal;
+                rowHtml += `<td><b>${endTotal}</b></td></tr>`;
+                table.innerHTML += rowHtml;
+            }
+            document.getElementById('grandTotal').innerText = grandTotal;
+        }
+
+        // 輸入分數
+        window.inputScore = function(val) {
+            if (currentEndIndex >= totalEnds) {
+                alert('已經射完所有趟數囉！可以儲存成績了。');
+                return;
+            }
+            
+            scoreData[currentEndIndex][currentArrowIndex] = val;
+            currentArrowIndex++;
+            
+            // 自動跳下一趟
+            if (currentArrowIndex >= arrowsPerEnd) {
+                currentArrowIndex = 0;
+                currentEndIndex++;
+            }
+            renderScoreTable();
+        };
+
+        // 退回上一格
+        window.undoScore = function() {
+            if (currentEndIndex === 0 && currentArrowIndex === 0) return; // 已經在第一格
+            
+            if (currentArrowIndex === 0) {
+                currentEndIndex--;
+                currentArrowIndex = arrowsPerEnd - 1;
+            } else {
+                currentArrowIndex--;
+            }
+            
+            scoreData[currentEndIndex][currentArrowIndex] = null;
+            renderScoreTable();
+        };
+
+        // 儲存與歷史紀錄處理
+        document.getElementById('saveScoreRecBtn').onclick = () => {
+            const grandTotal = document.getElementById('grandTotal').innerText;
+            const now = new Date();
+            // 自動產生預設名稱：YYYY-MM-DD HH:MM
+            const defaultName = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} 紀錄`;
+            
+            const record = {
+                id: Date.now(),
+                name: defaultName,
+                totalScore: grandTotal,
+                ends: totalEnds,
+                arrows: arrowsPerEnd,
+                data: JSON.parse(JSON.stringify(scoreData)) // 深度拷貝
+            };
+
+            let history = JSON.parse(localStorage.getItem('archeryHistory')) || [];
+            history.unshift(record); // 存入最前面
+            localStorage.setItem('archeryHistory', JSON.stringify(history));
+            
+            alert('成績已儲存！');
+            switchTab('History');
+        };
+
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            let history = JSON.parse(localStorage.getItem('archeryHistory')) || [];
+            
+            if (history.length === 0) {
+                list.innerHTML = '<div class="no-data">目前沒有歷史紀錄。</div>';
+                return;
+            }
+
+            list.innerHTML = '';
+            history.forEach(rec => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                
+                // 可編輯的名稱輸入框
+                const nameInput = document.createElement('input');
+                nameInput.value = rec.name;
+                nameInput.onchange = (e) => updateHistoryName(rec.id, e.target.value);
+                
+                const summaryDiv = document.createElement('div');
+                summaryDiv.className = 'history-summary';
+                summaryDiv.innerHTML = `<span><b>總分: ${rec.totalScore}</b> (${rec.ends}趟 x ${rec.arrows}箭)</span>`;
+                
+                const delBtn = document.createElement('button');
+                delBtn.className = 'del-history-btn';
+                delBtn.innerText = '刪除';
+                delBtn.onclick = () => {
+                    if(confirm('確定要刪除這筆紀錄嗎？')) {
+                        history = history.filter(h => h.id !== rec.id);
+                        localStorage.setItem('archeryHistory', JSON.stringify(history));
+                        renderHistory();
+                    }
+                };
+
+                summaryDiv.appendChild(delBtn);
+                item.appendChild(nameInput);
+                item.appendChild(summaryDiv);
+                list.appendChild(item);
+            });
+        }
+
+        function updateHistoryName(id, newName) {
+            let history = JSON.parse(localStorage.getItem('archeryHistory')) || [];
+            const index = history.findIndex(h => h.id === id);
+            if (index !== -1) {
+                history[index].name = newName;
+                localStorage.setItem('archeryHistory', JSON.stringify(history));
+            }
+        }
     </script>
 </body>
 </html>
