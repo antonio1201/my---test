@@ -14,7 +14,6 @@
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3069/3069186.png">
 
     <title>射箭動作線性觀察與控制系統</title>
-    <!-- 引入外部套件 -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -56,14 +55,17 @@
 
         .canvas-container { position: relative; flex-grow: 1; width: 100vw; background-color: #000; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         video { display: none; } 
-        /* 這裡改為 contain，確保畫面不被放大或裁切 */
+        /* 確保即時相機畫面不會被放大變形 */
         canvas { width: 100%; height: 100%; object-fit: contain; display: block; }
         
         /* Modal 通用樣式 */
-        .modal { display: none; position: fixed; z-index: 10001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); flex-direction: column; justify-content: flex-start; align-items: center; overflow-y: auto; padding-top: calc(20px + env(safe-area-inset-top)); padding-bottom: 20px;}
-        .modal-content-wrapper { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; }
+        .modal { display: none; position: fixed; z-index: 10001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.95); flex-direction: column; justify-content: flex-start; align-items: center; overflow-y: auto; padding-top: calc(20px + env(safe-area-inset-top)); padding-bottom: 20px;}
+        .modal-content-wrapper { display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; padding: 10px; box-sizing: border-box; }
         .close-modal { position: absolute; top: calc(20px + env(safe-area-inset-top)); right: 30px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 10006; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
         
+        /* 修改：讓彈出視窗中的相片與影片自動根據手機縮放，不放大不變形 */
+        .modal img, .modal video { max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 8px; background: transparent; }
+
         /* 面板與列表 */
         .score-container, .gallery-container, .sight-container, .match-container { background: white; width: 95%; max-width: 500px; border-radius: 8px; margin: 0 auto; padding: 15px; box-sizing: border-box; text-align: center; }
         .score-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
@@ -119,9 +121,8 @@
         /* 媒體庫 */
         #gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; justify-items: center;}
         .gallery-item { text-align: center; width: 100%; position: relative; overflow: hidden; border-radius: 5px; border: 1px solid #ddd; background: black; }
-        /* 縮圖也改為 contain 以避免裁切 */
-        .gallery-item img, .gallery-item video { width: 100%; height: 110px; display: block; cursor: pointer; object-fit: contain; background: #000; }
-        
+        /* 縮圖維持填滿，讓版面整齊 */
+        .gallery-item img, .gallery-item video { width: 100%; height: 110px; display: block; cursor: pointer; object-fit: cover; }
         .select-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); display: none; pointer-events: none; border: 3px solid transparent; box-sizing: border-box; border-radius: 5px; }
         .select-overlay::after { content: ''; position: absolute; top: 5px; right: 5px; width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff; background: rgba(0,0,0,0.5); box-sizing: border-box; }
         .gallery-item.selected .select-overlay { display: block; border-color: #2ECC71; background: rgba(46,204,113,0.2); }
@@ -138,7 +139,6 @@
 
     <div id="toastMsg" class="toast-msg">已存入紀錄庫</div>
 
-    <!-- 側邊選單 -->
     <div class="menu-overlay" id="menuOverlay"></div>
     <div class="side-menu" id="sideMenu">
         <span class="close-menu-btn" id="closeMenuBtn">&times;</span>
@@ -150,7 +150,6 @@
         <button id="menuGalleryBtn">📸 媒體紀錄庫</button>
     </div>
 
-    <!-- 主控面板 -->
     <div class="controls">
         <div class="controls-row">
             <div class="hamburger-btn" id="openMenuBtn"><div></div><div></div><div></div></div>
@@ -173,7 +172,6 @@
         <canvas id="outputCanvas"></canvas>
     </div>
 
-    <!-- 1. 骨架顯示設定 -->
     <div id="poseModalUI" class="modal">
         <div class="score-container">
             <div class="score-header">
@@ -201,7 +199,6 @@
         </div>
     </div>
 
-    <!-- 2. 媒體紀錄庫 -->
     <div id="galleryModalUI" class="modal">
         <div class="gallery-container" id="galleryContainer">
             <div class="gallery-header">
@@ -222,13 +219,11 @@
         </div>
     </div>
 
-    <!-- 全螢幕媒體預覽 -->
     <div id="mediaModal" class="modal" style="z-index: 10005;">
         <span class="close-modal" id="closeModal">&times;</span>
         <div class="modal-content-wrapper" id="modalContent"></div>
     </div>
 
-    <!-- 3. 瞄準器紀錄系統 -->
     <div id="sightModalUI" class="modal">
         <div class="sight-container">
             <div class="score-header">
@@ -250,7 +245,6 @@
         </div>
     </div>
 
-    <!-- 4. 雙人對抗賽系統 -->
     <div id="matchModalUI" class="modal">
         <div class="match-container">
             <div class="score-header">
@@ -314,7 +308,6 @@
         </div>
     </div>
 
-    <!-- 5. 個人計分系統 -->
     <div id="scoreModalUI" class="modal">
         <div class="score-container">
             <div class="score-header">
@@ -387,7 +380,6 @@
         </div>
     </div>
 
-    <!-- 獨立的統計圖表視窗 -->
     <div id="statsModalUI" class="modal" style="z-index: 10005;">
         <div class="score-container" style="max-height: 90vh; overflow-y: auto; width: 90%; max-width: 450px;">
             <div class="score-header" style="border-bottom: 2px solid #3498DB;">
@@ -402,7 +394,6 @@
         </div>
     </div>
 
-    <!-- 隱藏的成績單模板 (用於截圖匯出) -->
     <div id="exportCardWrapper" style="position: absolute; top: -9999px; left: -9999px; z-index: -1;">
         <div id="exportCard" style="background: white; padding: 20px; border-radius: 10px; min-width: 400px; color: black; font-family: Arial; text-align: center;">
             <h2 id="exName" style="margin-top:0; border-bottom: 2px solid #ccc; padding-bottom: 10px;"></h2>
@@ -414,6 +405,9 @@
     </div>
 
     <script>
+        // 初始化且只宣告一次圖表實例
+        let statsChartInstance = null;
+
         // ========== 通用與選單邏輯 ==========
         const openMenuBtn = document.getElementById('openMenuBtn');
         const sideMenu = document.getElementById('sideMenu');
@@ -523,14 +517,17 @@
         startCamera(); 
 
         document.getElementById('switchCamBtn').addEventListener('click', () => { cameraMode = (cameraMode === 'user') ? 'environment' : 'user'; startCamera(); });
+        
         const photoModeToggle = document.getElementById('photoModeToggle');
         const timerInput = document.getElementById('timerInput');
         const modeLabel = document.getElementById('modeLabel');
         const secLabel = document.getElementById('secLabel');
+        
         photoModeToggle.addEventListener('change', (e) => {
             if (e.target.checked) { modeLabel.innerText = '倒數'; timerInput.style.display = 'inline-block'; secLabel.style.display = 'inline-block'; } 
             else { modeLabel.innerText = '立即'; timerInput.style.display = 'none'; secLabel.style.display = 'none'; }
         });
+        
         document.getElementById('actionShootBtn').addEventListener('click', () => {
             if (photoModeToggle.checked) {
                 const val = parseInt(timerInput.value);
@@ -538,6 +535,7 @@
                 countdownVal = val; isCounting = true; countdownStartTime = Date.now();
             } else { capturePhoto(); }
         });
+        
         document.getElementById('recordBtn').addEventListener('click', () => {
             const recBtn = document.getElementById('recordBtn');
             if (!isRecording) {
@@ -571,6 +569,7 @@
         }
 
         document.getElementById('closeModal').addEventListener('click', () => { document.getElementById('mediaModal').style.display = 'none'; document.getElementById('modalContent').innerHTML = ''; });
+        
         function openModal(src, type) {
             const modal = document.getElementById('mediaModal'); const content = document.getElementById('modalContent'); content.innerHTML = ''; 
             if (type === 'image') { const img = document.createElement('img'); img.src = src; content.appendChild(img); } 
@@ -688,7 +687,7 @@
             }
         };
 
-        // ========== 雙人對抗賽邏輯 (加射系統 X > 10) ==========
+        // ========== 雙人對抗賽邏輯 ==========
         let matchData = []; 
         let mEnd = 0, mPlayer = 0, mArrow = 0;
         let matchType = 'recurve';
@@ -888,7 +887,7 @@
                 if (mPlayer === 0) mPlayer = 1;
                 else {
                     let r1 = getShootOffRank(shootOffData[0]); let r2 = getShootOffRank(shootOffData[1]);
-                    // 自動判定 X > 10 等等
+                    // 自動判定 X > 10
                     if (r1 > r2) shootOffWinner = 0; else if (r2 > r1) shootOffWinner = 1; else shootOffWinner = 'tie';
                 }
                 renderMatchTable(); return;
@@ -949,65 +948,17 @@
             switchTab('History');
         };
 
-        // ========== 對抗賽匯出圖片 ==========
-        function exportMatchScoreToImage(id) {
-            const history = JSON.parse(localStorage.getItem('archeryHistory')) || [];
-            const record = history.find(h => h.id === id); if (!record) return;
-
-            const card = document.getElementById('exportCard');
-            document.getElementById('exName').innerText = record.name;
-            document.getElementById('exTotal').innerText = `⚔️ ${record.matchType === 'recurve' ? '反曲弓對抗' : '複合弓對抗'}`;
-
-            let winStr = "";
-            if (record.isShootOff) {
-                let winnerName = record.shootOffWinner === 0 ? record.p1Name : (record.shootOffWinner === 1 ? record.p2Name : '平手');
-                winStr = `加射: ${record.shootOffData[0] || 'M'} vs ${record.shootOffData[1] || 'M'} (${winnerName} 勝)`;
-            } else {
-                let w = "";
-                if (record.matchType === 'recurve') {
-                    if (record.p1Set > record.p2Set) w = record.p1Name; else if (record.p2Set > record.p1Set) w = record.p2Name;
-                } else {
-                    if (record.p1Total > record.p2Total) w = record.p1Name; else if (record.p2Total > record.p1Total) w = record.p2Name;
-                }
-                if(w) winStr = `🏆 ${w} 獲勝`; else winStr = "平手";
-            }
-            
-            let p1S = record.matchType === 'recurve' ? `${record.p1Set} 點` : `${record.p1Total} 分`;
-            let p2S = record.matchType === 'recurve' ? `${record.p2Set} 點` : `${record.p2Total} 分`;
-
-            document.getElementById('exAvg').innerHTML = `<span style="color:#2980B9">${record.p1Name}: ${p1S}</span> vs <span style="color:#E74C3C">${record.p2Name}: ${p2S}</span><br><span style="color:#27AE60">${winStr}</span>`;
-
-            let thead = `<tr><th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">趟</th>
-                        <th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">選手</th>
-                        <th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">1</th>
-                        <th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">2</th>
-                        <th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">3</th>
-                        <th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">小計</th></tr>`;
-            
-            let tbody = '';
-            for (let e = 0; e < 5; e++) {
-                let p1Sum = 0, p2Sum = 0; let p1A = "", p2A = "";
-                for(let a=0; a<3; a++){ 
-                    let v1 = record.data[e][0][a]; p1Sum += parseScore(v1); p1A += `<td style="border:1px solid #ccc; padding:5px;">${v1||''}</td>`; 
-                    let v2 = record.data[e][1][a]; p2Sum += parseScore(v2); p2A += `<td style="border:1px solid #ccc; padding:5px;">${v2||''}</td>`; 
-                }
-                tbody += `<tr><td rowspan="2" style="border:1px solid #ccc; padding:8px; font-weight:bold; background:#fff;">${e + 1}</td>
-                              <td style="border:1px solid #ccc; padding:5px; background:#EBF5FB;">${record.p1Name.substring(0,3)}</td>${p1A}
-                              <td style="border:1px solid #ccc; padding:5px; font-weight:bold; background:#EBF5FB;">${p1Sum}</td></tr>`;
-                tbody += `<tr><td style="border:1px solid #ccc; padding:5px; background:#FDEDEC;">${record.p2Name.substring(0,3)}</td>${p2A}
-                              <td style="border:1px solid #ccc; padding:5px; font-weight:bold; background:#FDEDEC;">${p2Sum}</td></tr>`;
-            }
-            document.getElementById('exTable').innerHTML = thead + tbody;
-
-            html2canvas(document.getElementById('exportCard'), { scale: 2 }).then(canvas => {
-                const dataURL = canvas.toDataURL('image/png'); const now = new Date();
-                const filename = `match_card_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.png`;
-                addMediaItem(dataURLtoFile(dataURL, filename), 'image');
-            });
-        }
-
-        // ========== 個人計分系統邏輯 (維持不變) ==========
+        // ========== 個人計分系統邏輯 ==========
         let scoreData = []; let totalEnds = 6; let arrowsPerEnd = 6; let currentDistance = '70'; let currentEndIndex = 0; let currentArrowIndex = 0; let currentGrandTotal = 0; let currentAvg = "0.00";
+
+        const tabs = ['Setup', 'Scoring', 'History'];
+        tabs.forEach(tab => { document.getElementById(`tab${tab}`).addEventListener('click', () => switchTab(tab)); });
+
+        function switchTab(activeTab) {
+            tabs.forEach(tab => { document.getElementById(`tab${tab}`).classList.remove('active'); document.getElementById(`section${tab}`).style.display = 'none'; });
+            document.getElementById(`tab${activeTab}`).classList.add('active'); document.getElementById(`section${activeTab}`).style.display = 'block';
+            if (activeTab === 'History') renderHistory();
+        }
 
         document.getElementById('inputDistance').addEventListener('change', function(e) {
             const customInput = document.getElementById('inputCustomDistance');
@@ -1150,7 +1101,6 @@
         }
 
         // 統計圓餅圖
-        let statsChartInstance = null;
         function getScoreColor(val) {
             const colors = { 'X':'#FFD700', '10':'#F1C40F', '9':'#F39C12', '8':'#E74C3C', '7':'#C0392B', '6':'#3498DB', '5':'#2980B9', '4':'#34495E', '3':'#2C3E50', '2':'#ECF0F1', '1':'#BDC3C7', 'M':'#95A5A6' };
             return colors[val] || '#ccc';
@@ -1185,7 +1135,6 @@
 
             const ctx = document.getElementById('statsChart').getContext('2d');
             if (statsChartInstance) statsChartInstance.destroy(); 
-            
             statsChartInstance = new Chart(ctx, { type: 'pie', data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors, borderWidth: 1, borderColor: '#fff' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } } });
             document.getElementById('statsModalUI').style.display = 'flex';
         }
@@ -1212,6 +1161,63 @@
             html2canvas(card, { scale: 2 }).then(canvas => {
                 const dataURL = canvas.toDataURL('image/png'); const now = new Date();
                 const filename = `score_card_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.png`;
+                addMediaItem(dataURLtoFile(dataURL, filename), 'image');
+            });
+        }
+
+        // 對抗賽匯出相片
+        function exportMatchScoreToImage(id) {
+            const history = JSON.parse(localStorage.getItem('archeryHistory')) || [];
+            const record = history.find(h => h.id === id); if (!record) return;
+
+            const card = document.getElementById('exportCard');
+            document.getElementById('exName').innerText = record.name;
+            document.getElementById('exTotal').innerText = `⚔️ ${record.matchType === 'recurve' ? '反曲弓對抗' : '複合弓對抗'}`;
+
+            let winStr = "";
+            if (record.isShootOff) {
+                let winnerName = record.shootOffWinner === 0 ? record.p1Name : (record.shootOffWinner === 1 ? record.p2Name : '平手');
+                winStr = `加射: ${record.shootOffData[0] || 'M'} vs ${record.shootOffData[1] || 'M'} (${winnerName} 勝)`;
+            } else {
+                let w = "";
+                if (record.matchType === 'recurve') {
+                    if (record.p1Set > record.p2Set) w = record.p1Name; else if (record.p2Set > record.p1Set) w = record.p2Name;
+                } else {
+                    if (record.p1Total > record.p2Total) w = record.p1Name; else if (record.p2Total > record.p1Total) w = record.p2Name;
+                }
+                if(w) winStr = `🏆 ${w} 獲勝`; else winStr = "平手";
+            }
+            
+            let p1S = record.matchType === 'recurve' ? `${record.p1Set} 點` : `${record.p1Total} 分`;
+            let p2S = record.matchType === 'recurve' ? `${record.p2Set} 點` : `${record.p2Total} 分`;
+
+            document.getElementById('exAvg').innerHTML = `<span style="color:#2980B9">${record.p1Name}: ${p1S}</span> vs <span style="color:#E74C3C">${record.p2Name}: ${p2S}</span><br><span style="color:#27AE60">${winStr}</span>`;
+
+            let thead = `<tr><th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">趟</th>
+                        <th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">選手</th>
+                        <th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">1</th>
+                        <th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">2</th>
+                        <th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">3</th>
+                        <th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">小計</th></tr>`;
+            
+            let tbody = '';
+            for (let e = 0; e < 5; e++) {
+                let p1Sum = 0, p2Sum = 0; let p1A = "", p2A = "";
+                for(let a=0; a<3; a++){ 
+                    let v1 = record.data[e][0][a]; p1Sum += parseScore(v1); p1A += `<td style="border:1px solid #ccc; padding:5px;">${v1||''}</td>`; 
+                    let v2 = record.data[e][1][a]; p2Sum += parseScore(v2); p2A += `<td style="border:1px solid #ccc; padding:5px;">${v2||''}</td>`; 
+                }
+                tbody += `<tr><td rowspan="2" style="border:1px solid #ccc; padding:8px; font-weight:bold; background:#fff;">${e + 1}</td>
+                              <td style="border:1px solid #ccc; padding:5px; background:#EBF5FB;">${record.p1Name.substring(0,3)}</td>${p1A}
+                              <td style="border:1px solid #ccc; padding:5px; font-weight:bold; background:#EBF5FB;">${p1Sum}</td></tr>`;
+                tbody += `<tr><td style="border:1px solid #ccc; padding:5px; background:#FDEDEC;">${record.p2Name.substring(0,3)}</td>${p2A}
+                              <td style="border:1px solid #ccc; padding:5px; font-weight:bold; background:#FDEDEC;">${p2Sum}</td></tr>`;
+            }
+            document.getElementById('exTable').innerHTML = thead + tbody;
+
+            html2canvas(document.getElementById('exportCard'), { scale: 2 }).then(canvas => {
+                const dataURL = canvas.toDataURL('image/png'); const now = new Date();
+                const filename = `match_card_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.png`;
                 addMediaItem(dataURLtoFile(dataURL, filename), 'image');
             });
         }
