@@ -56,7 +56,8 @@
 
         .canvas-container { position: relative; flex-grow: 1; width: 100vw; background-color: #000; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         video { display: none; } 
-        canvas { width: 100%; height: 100%; object-fit: cover; display: block; }
+        /* 這裡改為 contain，確保畫面不被放大或裁切 */
+        canvas { width: 100%; height: 100%; object-fit: contain; display: block; }
         
         /* Modal 通用樣式 */
         .modal { display: none; position: fixed; z-index: 10001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); flex-direction: column; justify-content: flex-start; align-items: center; overflow-y: auto; padding-top: calc(20px + env(safe-area-inset-top)); padding-bottom: 20px;}
@@ -118,7 +119,9 @@
         /* 媒體庫 */
         #gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; justify-items: center;}
         .gallery-item { text-align: center; width: 100%; position: relative; overflow: hidden; border-radius: 5px; border: 1px solid #ddd; background: black; }
-        .gallery-item img, .gallery-item video { width: 100%; height: 110px; display: block; cursor: pointer; object-fit: cover; }
+        /* 縮圖也改為 contain 以避免裁切 */
+        .gallery-item img, .gallery-item video { width: 100%; height: 110px; display: block; cursor: pointer; object-fit: contain; background: #000; }
+        
         .select-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); display: none; pointer-events: none; border: 3px solid transparent; box-sizing: border-box; border-radius: 5px; }
         .select-overlay::after { content: ''; position: absolute; top: 5px; right: 5px; width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff; background: rgba(0,0,0,0.5); box-sizing: border-box; }
         .gallery-item.selected .select-overlay { display: block; border-color: #2ECC71; background: rgba(46,204,113,0.2); }
@@ -219,6 +222,7 @@
         </div>
     </div>
 
+    <!-- 全螢幕媒體預覽 -->
     <div id="mediaModal" class="modal" style="z-index: 10005;">
         <span class="close-modal" id="closeModal">&times;</span>
         <div class="modal-content-wrapper" id="modalContent"></div>
@@ -1103,7 +1107,7 @@
                     let winnerText = "";
                     if (rec.isShootOff) {
                         let p1SO = rec.shootOffData[0] || '0'; let p2SO = rec.shootOffData[1] || '0';
-                        let winnerName = rec.shootOffWinner === 0 ? rec.p1Name : (rec.shootOffWinner === 1 ? rec.p2Name : '平手');
+                        let winnerName = rec.shootOffWinner === 0 ? rec.p1Name : (rec.shootOffWinner === 1 ? rec.p2Name : '未定');
                         winnerText = `<br><span style="color:#F39C12; font-size:12px;">加射: ${p1SO} - ${p2SO} (${winnerName} 勝)</span>`;
                     } else {
                         let winnerName = "";
@@ -1146,11 +1150,19 @@
         }
 
         // 統計圓餅圖
+        let statsChartInstance = null;
+        function getScoreColor(val) {
+            const colors = { 'X':'#FFD700', '10':'#F1C40F', '9':'#F39C12', '8':'#E74C3C', '7':'#C0392B', '6':'#3498DB', '5':'#2980B9', '4':'#34495E', '3':'#2C3E50', '2':'#ECF0F1', '1':'#BDC3C7', 'M':'#95A5A6' };
+            return colors[val] || '#ccc';
+        }
+
         function showStats(id) {
             const history = JSON.parse(localStorage.getItem('archeryHistory')) || []; const rec = history.find(h => h.id === id); if (!rec) return;
+
             const counts = { 'X':0, '10':0, '9':0, '8':0, '7':0, '6':0, '5':0, '4':0, '3':0, '2':0, '1':0, 'M':0 };
             let actualArrows = 0;
             rec.data.forEach(end => { end.forEach(arr => { if (arr !== null && counts[arr] !== undefined) { counts[arr]++; actualArrows++; } }); });
+            
             let avg = actualArrows > 0 ? (rec.totalScore / actualArrows).toFixed(2) : "0.00";
             document.getElementById('statsTitle').innerText = rec.name;
             const distStr = rec.distance ? rec.distance : '-';
@@ -1173,6 +1185,7 @@
 
             const ctx = document.getElementById('statsChart').getContext('2d');
             if (statsChartInstance) statsChartInstance.destroy(); 
+            
             statsChartInstance = new Chart(ctx, { type: 'pie', data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors, borderWidth: 1, borderColor: '#fff' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } } });
             document.getElementById('statsModalUI').style.display = 'flex';
         }
@@ -1185,10 +1198,14 @@
             let thead = '<tr><th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">趟</th>';
             for (let i = 1; i <= record.arrows; i++) thead += `<th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">${i}</th>`;
             thead += '<th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">小計</th></tr>';
+            
             let tbody = '';
             for (let e = 0; e < record.ends; e++) {
                 tbody += `<tr><td style="border:1px solid #ccc; padding:8px; font-weight:bold;">${e + 1}</td>`; let endTotal = 0;
-                for (let a = 0; a < record.arrows; a++) { const val = record.data[e][a]; endTotal += parseScore(val); tbody += `<td style="border:1px solid #ccc; padding:8px;">${val !== null ? val : ''}</td>`; }
+                for (let a = 0; a < record.arrows; a++) {
+                    const val = record.data[e][a]; endTotal += parseScore(val);
+                    tbody += `<td style="border:1px solid #ccc; padding:8px;">${val !== null ? val : ''}</td>`;
+                }
                 tbody += `<td style="border:1px solid #ccc; padding:8px; font-weight:bold;">${endTotal}</td></tr>`;
             }
             document.getElementById('exTable').innerHTML = thead + tbody;
