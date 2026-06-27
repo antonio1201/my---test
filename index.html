@@ -97,7 +97,7 @@
         .save-score-btn { background: #F39C12; color: white; padding: 10px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; flex-grow: 1; }
         .reset-score-btn { background: #E74C3C; color: white; padding: 10px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; flex-grow: 1; }
         
-        /* 歷史紀錄與列表 */
+        /* 歷史紀錄與瞄準器列表 */
         .history-list, .sight-list { text-align: left; max-height: 50vh; overflow-y: auto; padding-right: 5px;}
         .history-item, .sight-item { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 5px; background: #fafafa; }
         .history-item input { width: 100%; border: none; font-weight: bold; font-size: 16px; border-bottom: 1px dashed #ccc; padding: 2px 0; margin-bottom: 5px; background: transparent; color: #2C3E50; box-sizing: border-box; }
@@ -219,7 +219,6 @@
         </div>
     </div>
 
-    <!-- 全螢幕媒體預覽 -->
     <div id="mediaModal" class="modal" style="z-index: 10005;">
         <span class="close-modal" id="closeModal">&times;</span>
         <div class="modal-content-wrapper" id="modalContent"></div>
@@ -232,7 +231,6 @@
                 <h3 style="margin:0; color: #2C3E50;">📏 瞄準器紀錄</h3>
                 <span id="closeSightModal" style="font-size: 28px; cursor: pointer; font-weight: bold;">&times;</span>
             </div>
-            <!-- 縮短長度的優化 -->
             <div class="setup-group">
                 <label style="min-width: 60px;">距離:</label>
                 <input type="number" id="sightDist" placeholder="m" style="width:60px; flex-grow:0;">
@@ -452,7 +450,7 @@
         document.getElementById('toggleArms').addEventListener('change', e => drawOptions.arms = e.target.checked);
         document.getElementById('toggleBody').addEventListener('change', e => drawOptions.body = e.target.checked);
 
-        // ========== 相機與錄影邏輯 (維持不變) ==========
+        // ========== 相機與錄影邏輯 ==========
         const videoElement = document.getElementById('videoElement');
         const canvasElement = document.getElementById('outputCanvas');
         const canvasCtx = canvasElement.getContext('2d');
@@ -480,15 +478,9 @@
                 const drawLine = (pt1, pt2, color, thickness) => { canvasCtx.beginPath(); canvasCtx.moveTo(pt1.x * w, pt1.y * h); canvasCtx.lineTo(pt2.x * w, pt2.y * h); canvasCtx.strokeStyle = color; canvasCtx.lineWidth = thickness; canvasCtx.stroke(); };
                 const drawCircle = (pt, radius, color) => { canvasCtx.beginPath(); canvasCtx.arc(pt.x * w, pt.y * h, radius, 0, 2 * Math.PI); canvasCtx.fillStyle = color; canvasCtx.fill(); };
 
-                if (drawOptions.nose) {
-                    drawLine({x: lm[0].x, y: 0}, {x: lm[0].x, y: 1}, 'rgb(135, 206, 235)', 2); drawCircle(lm[0], 8, 'rgb(135, 206, 235)');
-                }
-                if (drawOptions.cg) {
-                    const upperMidX = (lm[11].x + lm[12].x) / 2; const lowerMidX = (lm[23].x + lm[24].x) / 2; drawLine({x: upperMidX, y: 0}, {x: lowerMidX, y: 1}, 'rgb(0, 100, 255)', 3);
-                }
-                if (drawOptions.body) {
-                    [[11, 23], [12, 24], [23, 24], [11, 12]].forEach(([p1, p2]) => { drawLine(lm[p1], lm[p2], 'rgb(100, 100, 100)', 2); drawCircle(lm[p1], 6, 'rgb(150, 150, 150)'); drawCircle(lm[p2], 6, 'rgb(150, 150, 150)'); });
-                }
+                if (drawOptions.nose) { drawLine({x: lm[0].x, y: 0}, {x: lm[0].x, y: 1}, 'rgb(135, 206, 235)', 2); drawCircle(lm[0], 8, 'rgb(135, 206, 235)'); }
+                if (drawOptions.cg) { const upperMidX = (lm[11].x + lm[12].x) / 2; const lowerMidX = (lm[23].x + lm[24].x) / 2; drawLine({x: upperMidX, y: 0}, {x: lowerMidX, y: 1}, 'rgb(0, 100, 255)', 3); }
+                if (drawOptions.body) { [[11, 23], [12, 24], [23, 24], [11, 12]].forEach(([p1, p2]) => { drawLine(lm[p1], lm[p2], 'rgb(100, 100, 100)', 2); drawCircle(lm[p1], 6, 'rgb(150, 150, 150)'); drawCircle(lm[p2], 6, 'rgb(150, 150, 150)'); }); }
                 if (drawOptions.arms) {
                     const checkAndDrawArm = (pts) => {
                         const straight = isStraight(lm[pts[0]], lm[pts[1]], lm[pts[2]]) && isStraight(lm[pts[1]], lm[pts[2]], lm[pts[3]]);
@@ -582,7 +574,7 @@
             modal.style.display = 'flex';
         }
 
-        // ========== IndexedDB 媒體庫管理 (維持不變) ==========
+        // ========== IndexedDB 媒體庫管理 ==========
         const DB_NAME = 'ArcheryMediaDB'; let db; let mediaItems = []; let isSelectMode = false;
         function initDB() {
             return new Promise((resolve, reject) => {
@@ -692,7 +684,7 @@
             }
         };
 
-        // ========== 雙人對抗賽邏輯 (加射系統 Shoot-Off) ==========
+        // ========== 雙人對抗賽邏輯 (加射系統 X > 10) ==========
         let matchData = []; 
         let mEnd = 0, mPlayer = 0, mArrow = 0;
         let matchType = 'recurve';
@@ -700,7 +692,7 @@
         
         let isShootOff = false;
         let shootOffData = [null, null];
-        let shootOffWinner = null; // null, 'tie', 0, 1
+        let shootOffWinner = null; 
 
         function startMatch() {
             matchType = document.getElementById('matchType').value;
@@ -719,6 +711,12 @@
         function parseScore(val) {
             if (val === 'X') return 10; if (val === 'M' || val === null) return 0;
             return parseInt(val) || 0;
+        }
+
+        // 加射排名判定：X(12) > 10(11) > 9(10) > ... > M(1)
+        function getShootOffRank(val) {
+            const ranks = {'X':12, '10':11, '9':10, '8':9, '7':8, '6':7, '5':6, '4':5, '3':4, '2':3, '1':2, 'M':1};
+            return ranks[val] || 0;
         }
 
         window.setMatchActiveCell = function(endIdx, playerIdx, arrowIdx) {
@@ -768,7 +766,7 @@
                 let matchOverNormal = false; let tied = false;
                 if (matchType === 'recurve') {
                     if (p1SetPoints >= 6 || p2SetPoints >= 6) matchOverNormal = true;
-                    else if (matchData[4][1][2] !== null) { // 射滿5趟
+                    else if (matchData[4][1][2] !== null) { 
                         if (p1SetPoints === p2SetPoints) tied = true;
                         else matchOverNormal = true;
                     }
@@ -803,7 +801,7 @@
                 
                 if (shootOffWinner === 'tie') {
                     html += `<tr><td colspan="2" style="padding:15px; background:#FDEDEC;">
-                        <p style="color:#E74C3C; font-weight:bold; margin-top:0;">加射分數相同！<br>請以靶心距離判定最終勝負：</p>
+                        <p style="color:#E74C3C; font-weight:bold; margin-top:0;">加射分數完全相同！<br>請以靶心距離判定最終勝負：</p>
                         <button onclick="resolveShootOff(0)" style="background:#2980B9; color:white; padding:8px 15px; border-radius:5px; border:none; margin:5px; font-weight:bold;">${p1Name} 較近 (勝)</button>
                         <button onclick="resolveShootOff(1)" style="background:#E74C3C; color:white; padding:8px 15px; border-radius:5px; border:none; margin:5px; font-weight:bold;">${p2Name} 較近 (勝)</button>
                         <br><button onclick="resetShootOff()" style="margin-top:10px; padding:5px 10px; border-radius:5px; border:1px solid #ccc; font-weight:bold;">雙方重新加射</button>
@@ -885,8 +883,9 @@
                 shootOffData[mPlayer] = val;
                 if (mPlayer === 0) mPlayer = 1;
                 else {
-                    let s1 = parseScore(shootOffData[0]); let s2 = parseScore(shootOffData[1]);
-                    if (s1 > s2) shootOffWinner = 0; else if (s2 > s1) shootOffWinner = 1; else shootOffWinner = 'tie';
+                    let r1 = getShootOffRank(shootOffData[0]); let r2 = getShootOffRank(shootOffData[1]);
+                    // 自動判定 X > 10 等等
+                    if (r1 > r2) shootOffWinner = 0; else if (r2 > r1) shootOffWinner = 1; else shootOffWinner = 'tie';
                 }
                 renderMatchTable(); return;
             }
@@ -946,17 +945,65 @@
             switchTab('History');
         };
 
-        // ========== 個人計分系統邏輯 (包含統計圓餅圖強制高到低) ==========
-        let scoreData = []; let totalEnds = 6; let arrowsPerEnd = 6; let currentDistance = '70'; let currentEndIndex = 0; let currentArrowIndex = 0; let currentGrandTotal = 0; let currentAvg = "0.00";
+        // ========== 對抗賽匯出圖片 ==========
+        function exportMatchScoreToImage(id) {
+            const history = JSON.parse(localStorage.getItem('archeryHistory')) || [];
+            const record = history.find(h => h.id === id); if (!record) return;
 
-        const tabs = ['Setup', 'Scoring', 'History'];
-        tabs.forEach(tab => { document.getElementById(`tab${tab}`).addEventListener('click', () => switchTab(tab)); });
+            const card = document.getElementById('exportCard');
+            document.getElementById('exName').innerText = record.name;
+            document.getElementById('exTotal').innerText = `⚔️ ${record.matchType === 'recurve' ? '反曲弓對抗' : '複合弓對抗'}`;
 
-        function switchTab(activeTab) {
-            tabs.forEach(tab => { document.getElementById(`tab${tab}`).classList.remove('active'); document.getElementById(`section${tab}`).style.display = 'none'; });
-            document.getElementById(`tab${activeTab}`).classList.add('active'); document.getElementById(`section${activeTab}`).style.display = 'block';
-            if (activeTab === 'History') renderHistory();
+            let winStr = "";
+            if (record.isShootOff) {
+                let winnerName = record.shootOffWinner === 0 ? record.p1Name : (record.shootOffWinner === 1 ? record.p2Name : '平手');
+                winStr = `加射: ${record.shootOffData[0] || 'M'} vs ${record.shootOffData[1] || 'M'} (${winnerName} 勝)`;
+            } else {
+                let w = "";
+                if (record.matchType === 'recurve') {
+                    if (record.p1Set > record.p2Set) w = record.p1Name; else if (record.p2Set > record.p1Set) w = record.p2Name;
+                } else {
+                    if (record.p1Total > record.p2Total) w = record.p1Name; else if (record.p2Total > record.p1Total) w = record.p2Name;
+                }
+                if(w) winStr = `🏆 ${w} 獲勝`; else winStr = "平手";
+            }
+            
+            let p1S = record.matchType === 'recurve' ? `${record.p1Set} 點` : `${record.p1Total} 分`;
+            let p2S = record.matchType === 'recurve' ? `${record.p2Set} 點` : `${record.p2Total} 分`;
+
+            document.getElementById('exAvg').innerHTML = `<span style="color:#2980B9">${record.p1Name}: ${p1S}</span> vs <span style="color:#E74C3C">${record.p2Name}: ${p2S}</span><br><span style="color:#27AE60">${winStr}</span>`;
+
+            let thead = `<tr><th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">趟</th>
+                        <th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">選手</th>
+                        <th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">1</th>
+                        <th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">2</th>
+                        <th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">3</th>
+                        <th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">小計</th></tr>`;
+            
+            let tbody = '';
+            for (let e = 0; e < 5; e++) {
+                let p1Sum = 0, p2Sum = 0; let p1A = "", p2A = "";
+                for(let a=0; a<3; a++){ 
+                    let v1 = record.data[e][0][a]; p1Sum += parseScore(v1); p1A += `<td style="border:1px solid #ccc; padding:5px;">${v1||''}</td>`; 
+                    let v2 = record.data[e][1][a]; p2Sum += parseScore(v2); p2A += `<td style="border:1px solid #ccc; padding:5px;">${v2||''}</td>`; 
+                }
+                tbody += `<tr><td rowspan="2" style="border:1px solid #ccc; padding:8px; font-weight:bold; background:#fff;">${e + 1}</td>
+                              <td style="border:1px solid #ccc; padding:5px; background:#EBF5FB;">${record.p1Name.substring(0,3)}</td>${p1A}
+                              <td style="border:1px solid #ccc; padding:5px; font-weight:bold; background:#EBF5FB;">${p1Sum}</td></tr>`;
+                tbody += `<tr><td style="border:1px solid #ccc; padding:5px; background:#FDEDEC;">${record.p2Name.substring(0,3)}</td>${p2A}
+                              <td style="border:1px solid #ccc; padding:5px; font-weight:bold; background:#FDEDEC;">${p2Sum}</td></tr>`;
+            }
+            document.getElementById('exTable').innerHTML = thead + tbody;
+
+            html2canvas(document.getElementById('exportCard'), { scale: 2 }).then(canvas => {
+                const dataURL = canvas.toDataURL('image/png'); const now = new Date();
+                const filename = `match_card_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.png`;
+                addMediaItem(dataURLtoFile(dataURL, filename), 'image');
+            });
         }
+
+        // ========== 個人計分系統邏輯 (維持不變) ==========
+        let scoreData = []; let totalEnds = 6; let arrowsPerEnd = 6; let currentDistance = '70'; let currentEndIndex = 0; let currentArrowIndex = 0; let currentGrandTotal = 0; let currentAvg = "0.00";
 
         document.getElementById('inputDistance').addEventListener('change', function(e) {
             const customInput = document.getElementById('inputCustomDistance');
@@ -1056,7 +1103,7 @@
                     let winnerText = "";
                     if (rec.isShootOff) {
                         let p1SO = rec.shootOffData[0] || '0'; let p2SO = rec.shootOffData[1] || '0';
-                        let winnerName = rec.shootOffWinner === 0 ? rec.p1Name : (rec.shootOffWinner === 1 ? rec.p2Name : '未定');
+                        let winnerName = rec.shootOffWinner === 0 ? rec.p1Name : (rec.shootOffWinner === 1 ? rec.p2Name : '平手');
                         winnerText = `<br><span style="color:#F39C12; font-size:12px;">加射: ${p1SO} - ${p2SO} (${winnerName} 勝)</span>`;
                     } else {
                         let winnerName = "";
@@ -1081,7 +1128,11 @@
                     }
                 });
 
-                if (!rec.isMatch) {
+                if (rec.isMatch) {
+                    const exportBtn = document.createElement('button'); exportBtn.className = 'export-history-btn'; exportBtn.innerText = '🖼️ 轉成相片';
+                    exportBtn.addEventListener('click', () => exportMatchScoreToImage(rec.id));
+                    actionsDiv.appendChild(exportBtn);
+                } else {
                     const exportBtn = document.createElement('button'); exportBtn.className = 'export-history-btn'; exportBtn.innerText = '🖼️ 轉成相片';
                     exportBtn.addEventListener('click', () => exportScoreToImage(rec.id));
                     const statsBtn = document.createElement('button'); statsBtn.className = 'stats-history-btn'; statsBtn.innerText = '📊 統計';
@@ -1094,26 +1145,17 @@
             });
         }
 
-        // 統計圓餅圖 (強制高分到低分)
-        let statsChartInstance = null;
-        function getScoreColor(val) {
-            const colors = { 'X':'#FFD700', '10':'#F1C40F', '9':'#F39C12', '8':'#E74C3C', '7':'#C0392B', '6':'#3498DB', '5':'#2980B9', '4':'#34495E', '3':'#2C3E50', '2':'#ECF0F1', '1':'#BDC3C7', 'M':'#95A5A6' };
-            return colors[val] || '#ccc';
-        }
-
+        // 統計圓餅圖
         function showStats(id) {
             const history = JSON.parse(localStorage.getItem('archeryHistory')) || []; const rec = history.find(h => h.id === id); if (!rec) return;
-
             const counts = { 'X':0, '10':0, '9':0, '8':0, '7':0, '6':0, '5':0, '4':0, '3':0, '2':0, '1':0, 'M':0 };
             let actualArrows = 0;
             rec.data.forEach(end => { end.forEach(arr => { if (arr !== null && counts[arr] !== undefined) { counts[arr]++; actualArrows++; } }); });
-            
             let avg = actualArrows > 0 ? (rec.totalScore / actualArrows).toFixed(2) : "0.00";
             document.getElementById('statsTitle').innerText = rec.name;
             const distStr = rec.distance ? rec.distance : '-';
             document.getElementById('statsAvg').innerText = `總分: ${rec.totalScore} / 平均: ${avg}分 \n(距離: ${distStr}m / 共 ${actualArrows} 箭)`;
             
-            // 強制按照高分到低分的順序顯示
             const scoreOrder = ['X', '10', '9', '8', '7', '6', '5', '4', '3', '2', '1', 'M'];
             let textStats = '';
             scoreOrder.forEach(k => {
@@ -1131,11 +1173,7 @@
 
             const ctx = document.getElementById('statsChart').getContext('2d');
             if (statsChartInstance) statsChartInstance.destroy(); 
-            
-            statsChartInstance = new Chart(ctx, {
-                type: 'pie', data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors, borderWidth: 1, borderColor: '#fff' }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
-            });
+            statsChartInstance = new Chart(ctx, { type: 'pie', data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors, borderWidth: 1, borderColor: '#fff' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } } });
             document.getElementById('statsModalUI').style.display = 'flex';
         }
 
@@ -1147,14 +1185,10 @@
             let thead = '<tr><th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">趟</th>';
             for (let i = 1; i <= record.arrows; i++) thead += `<th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">${i}</th>`;
             thead += '<th style="border:1px solid #ccc; padding:8px; background:#f9f9f9;">小計</th></tr>';
-            
             let tbody = '';
             for (let e = 0; e < record.ends; e++) {
                 tbody += `<tr><td style="border:1px solid #ccc; padding:8px; font-weight:bold;">${e + 1}</td>`; let endTotal = 0;
-                for (let a = 0; a < record.arrows; a++) {
-                    const val = record.data[e][a]; endTotal += parseScore(val);
-                    tbody += `<td style="border:1px solid #ccc; padding:8px;">${val !== null ? val : ''}</td>`;
-                }
+                for (let a = 0; a < record.arrows; a++) { const val = record.data[e][a]; endTotal += parseScore(val); tbody += `<td style="border:1px solid #ccc; padding:8px;">${val !== null ? val : ''}</td>`; }
                 tbody += `<td style="border:1px solid #ccc; padding:8px; font-weight:bold;">${endTotal}</td></tr>`;
             }
             document.getElementById('exTable').innerHTML = thead + tbody;
